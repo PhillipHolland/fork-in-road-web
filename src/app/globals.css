@@ -20,7 +20,7 @@
 }
 
 body {
-  background: var(--background); /* Use the default background variable to match the extension */
+  background: #F8F7F5; /* Restore the original background color to match the extension */
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;

@@ -345,8 +345,14 @@ export default function SearchForm() {
             font-size: 14px;
           }
 
+          .search-container {
+            width: 90%; /* Match the search-input width */
+            margin-left: auto;
+            margin-right: auto;
+          }
+
           .search-input {
-            width: 90%; /* Make the search bar 10% narrower on mobile */
+            width: 100%; /* Full width within the container */
             padding: 8px 35px 8px 8px;
             font-size: 14px;
           }
@@ -354,7 +360,7 @@ export default function SearchForm() {
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 18px; /* Adjust to ensure the icon stays inside the narrower search bar */
+            right: 8px; /* Adjust to fit within the search bar */
           }
 
           .search-label {
