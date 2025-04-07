@@ -8,6 +8,8 @@ export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showFallbackModal, setShowFallbackModal] = useState<boolean>(false);
+  const [fallbackUrl, setFallbackUrl] = useState<string>("");
 
   // Detect browser and preselect a likely default engine
   useEffect(() => {
@@ -65,6 +67,22 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
+  const closeFallbackModal = () => {
+    setShowFallbackModal(false);
+    setFallbackUrl("");
+  };
+
+  // Attempt to copy the URL to the clipboard
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        console.log("URL copied to clipboard:", text);
+      }).catch(err => {
+        console.error("Failed to copy URL to clipboard:", err);
+      });
+    }
+  };
+
   // Handle Grok search to avoid deep linking on mobile
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
@@ -73,7 +91,9 @@ export default function SearchForm() {
       const newTab = window.open(url, "_blank");
       // Fallback if the app opens or the tab fails to open
       if (!newTab) {
-        alert("It looks like the Grok app may have opened or the redirect failed. To open in Safari, copy this URL and paste it into Safari: " + url);
+        setFallbackUrl(url);
+        setShowFallbackModal(true);
+        copyToClipboard(url);
       }
     } else {
       // On desktop, open directly in a new tab
@@ -250,6 +270,13 @@ export default function SearchForm() {
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
+        .modal-url {
+          margin: 10px 0;
+          word-break: break-all;
+          font-size: 14px;
+          color: #000;
+        }
+
         .download-section {
           margin-top: 20px;
         }
@@ -312,6 +339,10 @@ export default function SearchForm() {
           .modal-button {
             padding: 8px 15px;
             font-size: 14px;
+          }
+
+          .modal-url {
+            font-size: 12px;
           }
 
           .download-text {
@@ -392,6 +423,25 @@ export default function SearchForm() {
               >
                 Default Engine
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFallbackModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-title">Open in Safari</div>
+            <p>It looks like the Grok app may have opened or the redirect failed. To open in Safari, click the URL below or copy it and paste it into Safari.</p>
+            <p className="modal-url">
+              <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">
+                {fallbackUrl}
+              </a>
+            </p>
+            <div className="modal-buttons">
+              <button onClick={closeFallbackModal} className="modal-button">
+                Close
+              </button>
             </div>
           </div>
         </div>
