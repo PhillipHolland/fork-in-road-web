@@ -9,8 +9,22 @@ export default function RedirectGrok() {
 
   useEffect(() => {
     if (encodedUrl) {
-      const url = decodeURIComponent(encodedUrl);
-      window.open(url, "_blank");
+      try {
+        const url = decodeURIComponent(encodedUrl);
+        console.log("Attempting to redirect to:", url);
+
+        // Try to open in a new tab
+        const newTab = window.open(url, "_blank");
+        if (!newTab) {
+          console.warn("window.open failed, falling back to window.location.href");
+          // Fallback to direct navigation in the current tab
+          window.location.href = url;
+        }
+      } catch (error) {
+        console.error("Error during redirect:", error);
+      }
+    } else {
+      console.error("No URL provided in query parameters");
     }
   }, [encodedUrl]);
 
