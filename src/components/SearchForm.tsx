@@ -345,6 +345,7 @@ export default function SearchForm() {
           }
 
           .search-input {
+            width: 90%; /* Make the search bar 10% narrower on mobile */
             padding: 8px 35px 8px 8px;
             font-size: 14px;
           }
@@ -497,7 +498,7 @@ export default function SearchForm() {
           rel="noopener noreferrer"
           className="download-button"
         >
-          <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={30} />
+          <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
         </a>
       </div>
     </div>
