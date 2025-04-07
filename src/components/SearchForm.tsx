@@ -69,8 +69,8 @@ export default function SearchForm() {
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
     if (isMobileDevice()) {
-      // On mobile, redirect through the /redirect page to avoid deep linking
-      const redirectUrl = `/redirect?url=${encodeURIComponent(url)}`;
+      // On mobile, redirect through the /redirect-grok page to avoid deep linking
+      const redirectUrl = `/redirect-grok?url=${encodeURIComponent(url)}`;
       window.open(redirectUrl, "_blank");
     } else {
       // On desktop, open directly in a new tab
