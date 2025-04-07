@@ -10,6 +10,8 @@ export default function SearchForm() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showFallbackModal, setShowFallbackModal] = useState<boolean>(false);
   const [fallbackUrl, setFallbackUrl] = useState<string>("");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(5);
 
   // Detect browser and preselect a likely default engine
   useEffect(() => {
@@ -70,6 +72,8 @@ export default function SearchForm() {
   const closeFallbackModal = () => {
     setShowFallbackModal(false);
     setFallbackUrl("");
+    setIsCopied(false);
+    setCountdown(5);
   };
 
   // Attempt to copy the URL to the clipboard
@@ -77,8 +81,10 @@ export default function SearchForm() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => {
         console.log("URL copied to clipboard:", text);
+        setIsCopied(true);
       }).catch(err => {
         console.error("Failed to copy URL to clipboard:", err);
+        setIsCopied(false);
       });
     }
   };
@@ -109,25 +115,40 @@ export default function SearchForm() {
     closeModal();
   };
 
+  // Retry the redirect
+  const retryRedirect = () => {
+    if (fallbackUrl) {
+      window.open(fallbackUrl, "_blank");
+    }
+  };
+
+  // Auto-retry the redirect with a countdown
+  useEffect(() => {
+    if (showFallbackModal && fallbackUrl) {
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            retryRedirect();
+            return 5; // Reset countdown
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setCountdown(5); // Reset countdown when modal closes
+    }
+  }, [showFallbackModal, fallbackUrl]);
+
   return (
     <div className="container">
-      <style jsx global>{`
-        body {
-          background: #F8F7F5;
-          margin: 0;
-          padding: 0;
-          min-height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-      `}</style>
       <style jsx>{`
         .container {
           width: 100%; /* Take full viewport width on smaller screens */
           max-width: 850px; /* Cap at 850px (15% narrower than 1000px) */
           margin: 0 auto;
-          padding: 20px;
+          padding: 10px 20px 20px; /* Reduce top padding to bring content closer to the top */
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
         }
@@ -288,6 +309,12 @@ export default function SearchForm() {
           color: #000;
         }
 
+        .modal-copied {
+          margin: 10px 0;
+          font-size: 14px;
+          color: green;
+        }
+
         .download-section {
           margin-top: 20px;
         }
@@ -304,7 +331,7 @@ export default function SearchForm() {
 
         @media (max-width: 850px) {
           .container {
-            padding: 15px;
+            padding: 10px 15px 15px; /* Adjust for smaller screens */
           }
 
           .header img {
@@ -356,14 +383,13 @@ export default function SearchForm() {
             font-size: 12px;
           }
 
+          .modal-copied {
+            font-size: 12px;
+          }
+
           .download-text {
             font-size: 12px;
             margin-bottom: 8px;
-          }
-
-          .download-button img {
-            width: 120px;
-            height: 24px;
           }
         }
       `}</style>
@@ -443,13 +469,17 @@ export default function SearchForm() {
         <div className="modal">
           <div className="modal-content">
             <div className="modal-title">Open in Safari</div>
-            <p>It looks like the Grok app may have opened or the redirect failed. To open in Safari, click the URL below or copy it and paste it into Safari.</p>
+            <p>It looks like the Grok app may have opened or the redirect failed. To open in Safari, click the URL below or copy it and paste it into Safari. Retrying in {countdown} seconds...</p>
             <p className="modal-url">
               <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">
                 {fallbackUrl}
               </a>
             </p>
+            {isCopied && <p className="modal-copied">Copied to clipboard!</p>}
             <div className="modal-buttons">
+              <button onClick={retryRedirect} className="modal-button">
+                Try Again
+              </button>
               <button onClick={closeFallbackModal} className="modal-button">
                 Close
               </button>
