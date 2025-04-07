@@ -29,4 +29,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overscroll-behavior-x: none; /* Disable horizontal overscrolling on mobile */
 }

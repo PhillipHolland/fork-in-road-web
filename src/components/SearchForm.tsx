@@ -69,7 +69,7 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
-  const closeFallbackModal = () => {
+ .Networks {
     setShowFallbackModal(false);
     setFallbackUrl("");
     setIsCopied(false);
@@ -151,6 +151,7 @@ export default function SearchForm() {
           padding: 20px; /* Restore original padding */
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+          box-sizing: border-box; /* Ensure padding is included in width */
         }
 
         /* Ensure the container is at least 850px wide on desktop screens */
@@ -353,7 +354,7 @@ export default function SearchForm() {
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 8px;
+            right: 18px; /* Adjust to ensure the icon stays inside the narrower search bar */
           }
 
           .search-label {
