@@ -75,6 +75,14 @@ export default function SearchForm() {
     }
   };
 
+  // Combined handler for "With Grok" button in modal
+  const handleGrokModalClick = () => {
+    if (isMobileDevice()) {
+      handleGrokSearch(query);
+    }
+    closeModal();
+  };
+
   return (
     <div className="container">
       <style jsx>{`
@@ -364,11 +372,10 @@ export default function SearchForm() {
             <div className="modal-buttons">
               <a
                 href={isMobileDevice() ? "#" : getGrokUrl(query)}
-                onClick={() => isMobileDevice() && handleGrokSearch(query)}
+                onClick={handleGrokModalClick}
                 target={isMobileDevice() ? undefined : "_blank"}
                 rel={isMobileDevice() ? undefined : "noopener noreferrer"}
                 className="modal-button"
-                onClick={closeModal}
               >
                 With Grok
               </a>
