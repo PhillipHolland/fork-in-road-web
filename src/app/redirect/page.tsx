@@ -1,21 +1,10 @@
-"use client";
-
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import RedirectClient from "./RedirectClient";
 
 export default function Redirect() {
-  const searchParams = useSearchParams();
-  const url = searchParams.get("url");
-
-  useEffect(() => {
-    if (url) {
-      window.location.href = url;
-    }
-  }, [url]);
-
   return (
-    <div>
-      <p>Redirecting...</p>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <RedirectClient />
+    </Suspense>
   );
 }
