@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import Head from "next/head";
@@ -13,7 +12,7 @@ export default function Home() {
           name="description"
           content="Fork in Road lets you search with Grok or your default engine. Choose your path and explore smarter search options today!"
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/app/favicon.ico" />
       </Head>
       <div className="min-h-screen" style={{ flexShrink: 0 }}>
         <style jsx global>{`
