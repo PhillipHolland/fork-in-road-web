@@ -148,11 +148,12 @@ export default function SearchForm() {
           width: 100%; /* Take full viewport width on smaller screens */
           max-width: 850px; /* Cap at 850px (15% narrower than 1000px) */
           margin: 0 auto;
-          padding: 10px 20px 20px; /* Reduce top padding to bring content closer to the top */
+          padding: 20px; /* Restore original padding */
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
         }
 
+        /* Ensure the container is at least 850px wide on desktop screens */
         @media (min-width: 850px) {
           .container {
             min-width: 850px;
@@ -331,7 +332,7 @@ export default function SearchForm() {
 
         @media (max-width: 850px) {
           .container {
-            padding: 10px 15px 15px; /* Adjust for smaller screens */
+            padding: 15px; /* Restore original padding for mobile */
           }
 
           .header img {
