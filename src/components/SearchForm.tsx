@@ -69,9 +69,12 @@ export default function SearchForm() {
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
     if (isMobileDevice()) {
-      // On mobile, redirect through the /redirect-grok page to avoid deep linking
-      const redirectUrl = `/redirect-grok?url=${encodeURIComponent(url)}`;
-      window.open(redirectUrl, "_blank");
+      // Attempt to open directly in a new tab
+      const newTab = window.open(url, "_blank");
+      // Fallback if the app opens or the tab fails to open
+      if (!newTab) {
+        alert("It looks like the Grok app may have opened or the redirect failed. To open in Safari, copy this URL and paste it into Safari: " + url);
+      }
     } else {
       // On desktop, open directly in a new tab
       window.open(url, "_blank", "noopener,noreferrer");
