@@ -354,7 +354,7 @@ export default function SearchForm() {
           .search-input {
             width: 100%; /* Full width within the container */
             padding: 8px 35px 8px 8px;
-            font-size: 14px;
+            font-size: 16px; /* Ensure font-size is 16px to prevent iOS Safari zooming */
           }
 
           .search-icon {
