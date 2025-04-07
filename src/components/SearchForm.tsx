@@ -334,7 +334,7 @@ export default function SearchForm() {
           Grok
         </a>
         <a
-          href={query ? getDefaultEngineUrl(query, defaultEngine) : "#"}
+          href={query ? getDefaultEngineUrl(query, defaultEngine ?? "google") : "#"}
           target="_blank"
           rel="noopener noreferrer"
           className={`search-button ${!query ? "button-disabled" : ""}`}
@@ -358,7 +358,7 @@ export default function SearchForm() {
                 With Grok
               </a>
               <a
-                href={getDefaultEngineUrl(query, defaultEngine)}
+                href={getDefaultEngineUrl(query, defaultEngine ?? "google")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="modal-button"
