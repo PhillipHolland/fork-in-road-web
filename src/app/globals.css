@@ -20,13 +20,13 @@
 }
 
 body {
-  background: #F8F7F5; /* Override the variable background with the intended color */
+  background: #F8F7F5;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
-  padding: 0;
+  padding: 20px 0; /* Add padding to create space at the top and bottom */
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Align content at the top instead of the center */
 }
