@@ -39,6 +39,11 @@ export default function SearchForm() {
     setDefaultEngine("google");
   }
 
+  // Utility to detect mobile devices
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   const getGrokUrl = (q: string) => {
     const url = new URL("https://grok.com/");
     url.searchParams.set("q", q);
@@ -60,6 +65,14 @@ export default function SearchForm() {
 
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  // Handle Grok search on mobile to avoid deep linking
+  const handleGrokSearch = (q: string) => {
+    if (isMobileDevice()) {
+      // On mobile, open the URL in a new window to avoid deep linking
+      window.open(getGrokUrl(q), "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -326,9 +339,10 @@ export default function SearchForm() {
 
       <div className="search-buttons">
         <a
-          href={query ? getGrokUrl(query) : "#"}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={isMobileDevice() ? "#" : (query ? getGrokUrl(query) : "#")}
+          onClick={() => isMobileDevice() && query && handleGrokSearch(query)}
+          target={isMobileDevice() ? undefined : "_blank"}
+          rel={isMobileDevice() ? undefined : "noopener noreferrer"}
           className={`search-button ${!query ? "button-disabled" : ""}`}
         >
           Grok
@@ -349,9 +363,10 @@ export default function SearchForm() {
             <div className="modal-title">How do you want to search?</div>
             <div className="modal-buttons">
               <a
-                href={getGrokUrl(query)}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={isMobileDevice() ? "#" : getGrokUrl(query)}
+                onClick={() => isMobileDevice() && handleGrokSearch(query)}
+                target={isMobileDevice() ? undefined : "_blank"}
+                rel={isMobileDevice() ? undefined : "noopener noreferrer"}
                 className="modal-button"
                 onClick={closeModal}
               >
