@@ -111,6 +111,17 @@ export default function SearchForm() {
 
   return (
     <div className="container">
+      <style jsx global>{`
+        body {
+          background: #F8F7F5;
+          margin: 0;
+          padding: 0;
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      `}</style>
       <style jsx>{`
         .container {
           width: 100%; /* Take full viewport width on smaller screens */
