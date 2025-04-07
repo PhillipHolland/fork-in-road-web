@@ -69,7 +69,7 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
- .Networks {
+  const closeFallbackModal = () => {
     setShowFallbackModal(false);
     setFallbackUrl("");
     setIsCopied(false);
