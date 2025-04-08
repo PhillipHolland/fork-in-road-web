@@ -8,10 +8,6 @@ export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [showFallbackModal, setShowFallbackModal] = useState<boolean>(false);
-  const [fallbackUrl, setFallbackUrl] = useState<string>("");
-  const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [countdown, setCountdown] = useState<number>(5);
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -91,49 +87,10 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
-  const closeFallbackModal = () => {
-    setShowFallbackModal(false);
-    setFallbackUrl("");
-    setIsCopied(false);
-    setCountdown(5);
-  };
-
-  // Attempt to copy the URL to the clipboard
-  const copyToClipboard = (text: string) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        console.log("URL copied to clipboard:", text);
-        setIsCopied(true);
-      }).catch(err => {
-        console.error("Failed to copy URL to clipboard:", err);
-        setIsCopied(false);
-      });
-    }
-  };
-
-  // Handle Grok search using an <a> tag to avoid deep linking on mobile
+  // Handle Grok search by redirecting the current page
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
-    // Create a hidden <a> tag and trigger a click
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Since we can't reliably detect if the redirect failed with an <a> tag click,
-    // we'll show the fallback modal after a short delay if the user is still on the page
-    setTimeout(() => {
-      // Check if the user is still on the page (indicating the redirect might have failed)
-      if (document.hasFocus()) {
-        setFallbackUrl(url);
-        setShowFallbackModal(true);
-        copyToClipboard(url);
-      }
-    }, 1000);
+    window.location.href = url; // Redirect the current page to the Grok URL
   };
 
   // Combined handler for "With Grok" button in modal
@@ -143,39 +100,6 @@ export default function SearchForm() {
     }
     closeModal();
   };
-
-  // Retry the redirect
-  const retryRedirect = () => {
-    if (fallbackUrl) {
-      const link = document.createElement("a");
-      link.href = fallbackUrl;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  // Auto-retry the redirect with a countdown
-  useEffect(() => {
-    if (showFallbackModal && fallbackUrl) {
-      const timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            retryRedirect();
-            return 5; // Reset countdown
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    } else {
-      setCountdown(5); // Reset countdown when modal closes
-    }
-  }, [showFallbackModal, fallbackUrl, retryRedirect]);
 
   return (
     <div className="container">
@@ -341,19 +265,6 @@ export default function SearchForm() {
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .modal-url {
-          margin: 10px 0;
-          word-break: break-all;
-          font-size: 14px;
-          color: #000;
-        }
-
-        .modal-copied {
-          margin: 10px 0;
-          font-size: 14px;
-          color: green;
-        }
-
         .download-section {
           margin-top: 20px;
         }
@@ -424,14 +335,6 @@ export default function SearchForm() {
           .modal-button {
             padding: 8px 15px;
             font-size: 14px;
-          }
-
-          .modal-url {
-            font-size: 12px;
-          }
-
-          .modal-copied {
-            font-size: 12px;
           }
 
           .download-text {
@@ -507,29 +410,6 @@ export default function SearchForm() {
               >
                 Default Engine
               </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showFallbackModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-title">Open in Safari</div>
-            <p>It looks like the Grok app may have opened or the redirect failed. To open in Safari, click the URL below or copy it and paste it into Safari. Retrying in {countdown} seconds...</p>
-            <p className="modal-url">
-              <a href={fallbackUrl} target="_blank" rel="noopener noreferrer">
-                {fallbackUrl}
-              </a>
-            </p>
-            {isCopied && <p className="modal-copied">Copied to clipboard!</p>}
-            <div className="modal-buttons">
-              <button onClick={retryRedirect} className="modal-button">
-                Try Again
-              </button>
-              <button onClick={closeFallbackModal} className="modal-button">
-                Close
-              </button>
             </div>
           </div>
         </div>
