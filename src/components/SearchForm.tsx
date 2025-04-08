@@ -13,6 +13,28 @@ export default function SearchForm() {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(5);
 
+  // Prevent zoom on touch for the search input
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const input = document.getElementById("query");
+    if (input) {
+      input.addEventListener("touchstart", preventZoom, { passive: false });
+      input.addEventListener("touchmove", preventZoom, { passive: false });
+    }
+
+    return () => {
+      if (input) {
+        input.removeEventListener("touchstart", preventZoom);
+        input.removeEventListener("touchmove", preventZoom);
+      }
+    };
+  }, []);
+
   // Detect browser and preselect a likely default engine
   useEffect(() => {
     const storedEngine = localStorage.getItem("defaultSearchEngine") as SearchEngine;
@@ -139,7 +161,7 @@ export default function SearchForm() {
     } else {
       setCountdown(5); // Reset countdown when modal closes
     }
-  }, [showFallbackModal, fallbackUrl]);
+  }, [showFallbackModal, fallbackUrl, retryRedirect]); // Add retryRedirect to dependency array
 
   return (
     <div className="container">
