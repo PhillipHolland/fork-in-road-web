@@ -65,7 +65,7 @@ export default function SearchForm() {
   };
 
   const getGrokRedirectUrl = (q: string) => {
-    return `/api/redirect?q=${encodeURIComponent(q)}`;
+    return `/api/redirect?q=${encodeURIComponent(q)}`; // Updated to /api/redirect
   };
 
   const getDefaultEngineUrl = (q: string, engine: SearchEngine) => {
