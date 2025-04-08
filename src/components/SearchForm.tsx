@@ -64,7 +64,6 @@ export default function SearchForm() {
   const getGrokUrl = (q: string) => {
     const url = new URL("https://grok.com/");
     url.searchParams.set("q", q);
-    url.searchParams.set("noapp", "1"); // Add a query parameter to potentially bypass Universal Links
     return url.toString();
   };
 
@@ -107,18 +106,19 @@ export default function SearchForm() {
 
   // Handle Grok search to avoid deep linking on mobile
   const handleGrokSearch = (q: string) => {
-    const url = getGrokUrl(q);
     if (isMobileDevice()) {
-      // Attempt to open directly in a new tab
-      const newTab = window.open(url, "_blank");
-      // Fallback if the app opens or the tab fails to open
+      // Use the redirect page to avoid Universal Links
+      const redirectUrl = `/redirect?q=${encodeURIComponent(q)}`;
+      const newTab = window.open(redirectUrl, "_blank");
       if (!newTab) {
+        const url = getGrokUrl(q);
         setFallbackUrl(url);
         setShowFallbackModal(true);
         copyToClipboard(url);
       }
     } else {
       // On desktop, open directly in a new tab
+      const url = getGrokUrl(q);
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
