@@ -5,7 +5,7 @@ export const metadata = {
   title: "Fork in Road: Search with Grok or Your Default Engine",
   description: "Fork in Road lets you search with Grok or your default engine. Choose your path and explore smarter search options today!",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.ico?v=3", // Add cache-busting query parameter
   },
 };
 
@@ -19,6 +19,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <meta name="theme-color" content="#F8F7F5" />
         <meta name="apple-mobile-web-app-status-bar-style" content="#F8F7F5" />
+        <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
