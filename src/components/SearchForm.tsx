@@ -13,11 +13,6 @@ export default function SearchForm() {
   const [grokUrl, setGrokUrl] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log("showExtensionModal changed:", showExtensionModal);
-  }, [showExtensionModal]);
-
   // Prevent zoom on touch for the search input
   useEffect(() => {
     const preventZoom = (e: TouchEvent) => {
@@ -105,6 +100,8 @@ export default function SearchForm() {
     setShowCopyModal(false);
     setGrokUrl("");
     setIsCopied(false);
+    // Reset the sessionStorage flag so the extension modal reappears on the next "Search with Grok" click
+    sessionStorage.removeItem("hasShownExtensionModal");
   };
 
   const closeExtensionModal = () => {
@@ -284,13 +281,13 @@ export default function SearchForm() {
         }
 
         .modal-title {
-          font-size: 18px;
+          font-size: 20px;
           margin-bottom: 20px;
           color: #000;
         }
 
         .modal-text {
-          font-size: 14px;
+          font-size: 16px;
           color: #666;
           margin-bottom: 20px;
         }
@@ -396,12 +393,12 @@ export default function SearchForm() {
           }
 
           .modal-title {
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 15px;
           }
 
           .modal-text {
-            font-size: 12px;
+            font-size: 14px;
             margin-bottom: 15px;
           }
 
@@ -509,7 +506,7 @@ export default function SearchForm() {
       {showExtensionModal && (
         <div className="modal">
           <div className="modal-content">
-            <div className="modal-title">Open in Safari</div>
+            <div className="modal-title">iOS Safari Limitations</div>
             <p className="modal-text">
               iOS can’t search directly in Safari—let’s fix that! Get our extension to choose your path.
             </p>
@@ -519,7 +516,7 @@ export default function SearchForm() {
               rel="noopener noreferrer"
               className="download-button"
             >
-              <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
+              <Image src="/black.svg" alt="Download Fork in Road Extension" width={165} height={36.3} />
             </a>
             <div className="modal-buttons" style={{ marginTop: "10px" }}>
               <button onClick={closeExtensionModal} className="modal-button">
