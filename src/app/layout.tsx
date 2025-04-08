@@ -22,8 +22,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              document.documentElement.style.backgroundColor = "#F8F7F5";
-              document.body.style.backgroundColor = "#F8F7F5";
+              (function setBackgroundColor() {
+                document.documentElement.style.backgroundColor = "#F8F7F5";
+                document.body.style.backgroundColor = "#F8F7F5";
+                // Set background color on all parent elements
+                let element = document.body;
+                while (element) {
+                  element.style.backgroundColor = "#F8F7F5";
+                  element = element.parentElement;
+                }
+                // Set viewport meta tag dynamically
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                  viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover');
+                }
+              })();
             `,
           }}
         />

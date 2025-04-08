@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { searchEngines, SearchEngine } from "@/lib/searchEngines";
 import Image from "next/image";
 
@@ -12,21 +12,6 @@ export default function SearchForm() {
   const [fallbackUrl, setFallbackUrl] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(5);
-
-  // Prevent pinch-to-zoom on mobile
-  useEffect(() => {
-    const preventZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("touchmove", preventZoom, { passive: false });
-
-    return () => {
-      document.removeEventListener("touchmove", preventZoom);
-    };
-  }, []);
 
   // Detect browser and preselect a likely default engine
   useEffect(() => {
@@ -106,24 +91,18 @@ export default function SearchForm() {
 
   // Handle Grok search to avoid deep linking on mobile
   const handleGrokSearch = (q: string) => {
+    const url = getGrokUrl(q);
     if (isMobileDevice()) {
-      // Use the redirect page to avoid Universal Links
-      const redirectUrl = `/redirect?q=${encodeURIComponent(q)}`;
-      // Try opening in a new tab first
-      const newTab = window.open(redirectUrl, "_blank");
+      // Attempt to open directly in a new tab
+      const newTab = window.open(url, "_blank");
+      // Fallback if the app opens or the tab fails to open
       if (!newTab) {
-        // Fallback to a hidden <a> tag to bypass Universal Links
-        const link = document.createElement("a");
-        link.href = redirectUrl;
-        link.target = "_blank";
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        setFallbackUrl(url);
+        setShowFallbackModal(true);
+        copyToClipboard(url);
       }
     } else {
       // On desktop, open directly in a new tab
-      const url = getGrokUrl(q);
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
@@ -137,11 +116,11 @@ export default function SearchForm() {
   };
 
   // Retry the redirect
-  const retryRedirect = useCallback(() => {
+  const retryRedirect = () => {
     if (fallbackUrl) {
       window.open(fallbackUrl, "_blank");
     }
-  }, [fallbackUrl]);
+  };
 
   // Auto-retry the redirect with a countdown
   useEffect(() => {
@@ -160,7 +139,7 @@ export default function SearchForm() {
     } else {
       setCountdown(5); // Reset countdown when modal closes
     }
-  }, [showFallbackModal, fallbackUrl, retryRedirect]);
+  }, [showFallbackModal, fallbackUrl]);
 
   return (
     <div className="container">
@@ -216,7 +195,6 @@ export default function SearchForm() {
           background: #fff;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
           transition: box-shadow 0.3s ease;
-          touch-action: pan-y; /* Ensure no zooming on touch */
         }
 
         .search-input:hover {
@@ -377,7 +355,6 @@ export default function SearchForm() {
             width: 100%; /* Full width within the container */
             padding: 8px 35px 8px 8px;
             font-size: 16px; /* Ensure font-size is 16px to prevent iOS Safari zooming */
-            touch-action: pan-y; /* Ensure no zooming on touch */
           }
 
           .search-icon {
