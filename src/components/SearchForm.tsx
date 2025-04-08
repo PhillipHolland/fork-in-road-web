@@ -64,10 +64,8 @@ export default function SearchForm() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  const getGrokUrl = (q: string) => {
-    const url = new URL("https://grok.com/");
-    url.searchParams.set("q", q);
-    return url.toString();
+  const getGrokRedirectUrl = (q: string) => {
+    return `/api/redirect?q=${encodeURIComponent(q)}`;
   };
 
   const getDefaultEngineUrl = (q: string, engine: SearchEngine) => {
@@ -87,10 +85,10 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
-  // Handle Grok search by redirecting the current page
+  // Handle Grok search by redirecting to the API route
   const handleGrokSearch = (q: string) => {
-    const url = getGrokUrl(q);
-    window.location.href = url; // Redirect the current page to the Grok URL
+    const redirectUrl = getGrokRedirectUrl(q);
+    window.location.href = redirectUrl; // Redirect to the API route
   };
 
   // Combined handler for "With Grok" button in modal
@@ -369,7 +367,7 @@ export default function SearchForm() {
 
       <div className="search-buttons">
         <a
-          href={isMobileDevice() ? "#" : (query ? getGrokUrl(query) : "#")}
+          href={isMobileDevice() ? "#" : (query ? getGrokRedirectUrl(query) : "#")}
           onClick={() => isMobileDevice() && query && handleGrokSearch(query)}
           target={isMobileDevice() ? undefined : "_blank"}
           rel={isMobileDevice() ? undefined : "noopener noreferrer"}
@@ -393,7 +391,7 @@ export default function SearchForm() {
             <div className="modal-title">How do you want to search?</div>
             <div className="modal-buttons">
               <a
-                href={isMobileDevice() ? "#" : getGrokUrl(query)}
+                href={isMobileDevice() ? "#" : getGrokRedirectUrl(query)}
                 onClick={handleGrokModalClick}
                 target={isMobileDevice() ? undefined : "_blank"}
                 rel={isMobileDevice() ? undefined : "noopener noreferrer"}
