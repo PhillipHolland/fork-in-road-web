@@ -1,4 +1,5 @@
-@import "tailwindcss";
+/* Remove Tailwind CSS import to prevent potential overrides */
+/* @import "tailwindcss"; */
 
 :root {
   --background: #ffffff;

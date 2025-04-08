@@ -195,6 +195,7 @@ export default function SearchForm() {
           background: #fff;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
           transition: box-shadow 0.3s ease;
+          touch-action: pan-y; /* Ensure no zooming on touch */
         }
 
         .search-input:hover {
@@ -355,6 +356,7 @@ export default function SearchForm() {
             width: 100%; /* Full width within the container */
             padding: 8px 35px 8px 8px;
             font-size: 16px; /* Ensure font-size is 16px to prevent iOS Safari zooming */
+            touch-action: pan-y; /* Ensure no zooming on touch */
           }
 
           .search-icon {
