@@ -1,21 +1,13 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-
-// Disable static prerendering for this page
 export const dynamic = "force-dynamic";
 
-export default function RedirectPage() {
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q");
+export default function RedirectPage({ searchParams }: { searchParams: { q?: string } }) {
+  const q = searchParams.q;
 
-  useEffect(() => {
-    if (q) {
-      // Redirect to the Grok URL
-      window.location.href = `https://grok.com/?q=${encodeURIComponent(q)}`;
-    }
-  }, [q]);
+  if (q) {
+    redirect(`https://grok.com/?q=${encodeURIComponent(q)}`);
+  }
 
   return (
     <div>

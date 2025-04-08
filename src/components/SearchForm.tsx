@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { searchEngines, SearchEngine } from "@/lib/searchEngines";
 import Image from "next/image";
 
@@ -112,8 +112,14 @@ export default function SearchForm() {
       // Try opening in a new tab first
       const newTab = window.open(redirectUrl, "_blank");
       if (!newTab) {
-        // Fallback to navigating the current tab
-        window.location.href = redirectUrl;
+        // Fallback to form submission to bypass Universal Links
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = redirectUrl;
+        form.target = "_blank";
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
       }
     } else {
       // On desktop, open directly in a new tab
@@ -131,11 +137,11 @@ export default function SearchForm() {
   };
 
   // Retry the redirect
-  const retryRedirect = () => {
+  const retryRedirect = useCallback(() => {
     if (fallbackUrl) {
       window.open(fallbackUrl, "_blank");
     }
-  };
+  }, [fallbackUrl]);
 
   // Auto-retry the redirect with a countdown
   useEffect(() => {
