@@ -111,22 +111,29 @@ export default function SearchForm() {
     }
   };
 
-  // Handle Grok search to avoid deep linking on mobile
+  // Handle Grok search using an <a> tag to avoid deep linking on mobile
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
-    if (isMobileDevice()) {
-      // Attempt to open directly in a new tab
-      const newTab = window.open(url, "_blank");
-      // Fallback if the app opens or the tab fails to open
-      if (!newTab) {
+    // Create a hidden <a> tag and trigger a click
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Since we can't reliably detect if the redirect failed with an <a> tag click,
+    // we'll show the fallback modal after a short delay if the user is still on the page
+    setTimeout(() => {
+      // Check if the user is still on the page (indicating the redirect might have failed)
+      if (document.hasFocus()) {
         setFallbackUrl(url);
         setShowFallbackModal(true);
         copyToClipboard(url);
       }
-    } else {
-      // On desktop, open directly in a new tab
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
+    }, 1000);
   };
 
   // Combined handler for "With Grok" button in modal
@@ -140,7 +147,14 @@ export default function SearchForm() {
   // Retry the redirect
   const retryRedirect = () => {
     if (fallbackUrl) {
-      window.open(fallbackUrl, "_blank");
+      const link = document.createElement("a");
+      link.href = fallbackUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -161,7 +175,7 @@ export default function SearchForm() {
     } else {
       setCountdown(5); // Reset countdown when modal closes
     }
-  }, [showFallbackModal, fallbackUrl, retryRedirect]); // Add retryRedirect to dependency array
+  }, [showFallbackModal, fallbackUrl, retryRedirect]);
 
   return (
     <div className="container">
