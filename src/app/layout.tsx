@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react"; // Import Vercel Analytics
 
 export const metadata = {
   title: "Fork in Road: Search with Grok or Your Default Engine",
   description: "Fork in Road lets you search with Grok or your default engine. Choose your path and explore smarter search options today!",
   icons: {
-    icon: "/favicon.ico?v=3", // Add cache-busting query parameter
+    icon: "/favicon.ico?v=3",
   },
 };
 
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           {children}
         </div>
+        <Analytics /> {/* Add Vercel Analytics component */}
       </body>
     </html>
   );
