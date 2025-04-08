@@ -13,6 +13,11 @@ export default function SearchForm() {
   const [grokUrl, setGrokUrl] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
+  // Debug state changes
+  useEffect(() => {
+    console.log("showExtensionModal changed:", showExtensionModal);
+  }, [showExtensionModal]);
+
   // Prevent zoom on touch for the search input
   useEffect(() => {
     const preventZoom = (e: TouchEvent) => {
@@ -446,7 +451,12 @@ export default function SearchForm() {
       <div className="search-buttons">
         <a
           href={isMobileDevice() ? "#" : (query ? getGrokUrl(query) : "#")}
-          onClick={() => isMobileDevice() && query && handleGrokSearch(query)}
+          onClick={(e) => {
+            if (isMobileDevice() && query) {
+              e.preventDefault(); // Prevent default navigation
+              handleGrokSearch(query);
+            }
+          }}
           target={isMobileDevice() ? undefined : "_blank"}
           rel={isMobileDevice() ? undefined : "noopener noreferrer"}
           className={`search-button ${!query ? "button-disabled" : ""}`}
@@ -470,7 +480,12 @@ export default function SearchForm() {
             <div className="modal-buttons">
               <a
                 href={isMobileDevice() ? "#" : getGrokUrl(query)}
-                onClick={handleGrokModalClick}
+                onClick={(e) => {
+                  if (isMobileDevice()) {
+                    e.preventDefault(); // Prevent default navigation
+                    handleGrokModalClick();
+                  }
+                }}
                 target={isMobileDevice() ? undefined : "_blank"}
                 rel={isMobileDevice() ? undefined : "noopener noreferrer"}
                 className="modal-button"
