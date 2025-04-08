@@ -8,6 +8,10 @@ export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showCopyModal, setShowCopyModal] = useState<boolean>(false);
+  const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
+  const [grokUrl, setGrokUrl] = useState<string>("");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -64,8 +68,15 @@ export default function SearchForm() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  const getGrokRedirectUrl = (q: string) => {
-    return `/api/redirect?q=${encodeURIComponent(q)}`; // Updated to /api/redirect
+  // Utility to detect iOS/iPadOS devices
+  const isIOSDevice = () => {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  };
+
+  const getGrokUrl = (q: string) => {
+    const url = new URL("https://grok.com/");
+    url.searchParams.set("q", q);
+    return url.toString();
   };
 
   const getDefaultEngineUrl = (q: string, engine: SearchEngine) => {
@@ -85,10 +96,45 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
-  // Handle Grok search by redirecting to the API route
+  const closeCopyModal = () => {
+    setShowCopyModal(false);
+    setGrokUrl("");
+    setIsCopied(false);
+  };
+
+  const closeExtensionModal = () => {
+    setShowExtensionModal(false);
+    // Proceed to the copy-and-paste modal after closing
+    setShowCopyModal(true);
+  };
+
+  // Attempt to copy the URL to the clipboard
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        console.log("URL copied to clipboard:", text);
+        setIsCopied(true);
+      }).catch(err => {
+        console.error("Failed to copy URL to clipboard:", err);
+        setIsCopied(false);
+      });
+    }
+  };
+
+  // Handle Grok search by showing a modal with the URL to copy
   const handleGrokSearch = (q: string) => {
-    const redirectUrl = getGrokRedirectUrl(q);
-    window.location.href = redirectUrl; // Redirect to the API route
+    const url = getGrokUrl(q);
+    setGrokUrl(url);
+
+    // Check if the user is on iOS/iPadOS and if the extension modal has been shown this session
+    const hasShownExtensionModal = sessionStorage.getItem("hasShownExtensionModal");
+    if (isIOSDevice() && !hasShownExtensionModal) {
+      setShowExtensionModal(true);
+      sessionStorage.setItem("hasShownExtensionModal", "true");
+    } else {
+      setShowCopyModal(true);
+      copyToClipboard(url);
+    }
   };
 
   // Combined handler for "With Grok" button in modal
@@ -238,6 +284,12 @@ export default function SearchForm() {
           color: #000;
         }
 
+        .modal-text {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 20px;
+        }
+
         .modal-buttons {
           display: flex;
           justify-content: center;
@@ -261,6 +313,19 @@ export default function SearchForm() {
         .modal-button:hover {
           background: #333;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .modal-url {
+          margin: 10px 0;
+          word-break: break-all;
+          font-size: 14px;
+          color: #000;
+        }
+
+        .modal-copied {
+          margin: 10px 0;
+          font-size: 14px;
+          color: green;
         }
 
         .download-section {
@@ -330,9 +395,22 @@ export default function SearchForm() {
             margin-bottom: 15px;
           }
 
+          .modal-text {
+            font-size: 12px;
+            margin-bottom: 15px;
+          }
+
           .modal-button {
             padding: 8px 15px;
             font-size: 14px;
+          }
+
+          .modal-url {
+            font-size: 12px;
+          }
+
+          .modal-copied {
+            font-size: 12px;
           }
 
           .download-text {
@@ -367,7 +445,7 @@ export default function SearchForm() {
 
       <div className="search-buttons">
         <a
-          href={isMobileDevice() ? "#" : (query ? getGrokRedirectUrl(query) : "#")}
+          href={isMobileDevice() ? "#" : (query ? getGrokUrl(query) : "#")}
           onClick={() => isMobileDevice() && query && handleGrokSearch(query)}
           target={isMobileDevice() ? undefined : "_blank"}
           rel={isMobileDevice() ? undefined : "noopener noreferrer"}
@@ -391,7 +469,7 @@ export default function SearchForm() {
             <div className="modal-title">How do you want to search?</div>
             <div className="modal-buttons">
               <a
-                href={isMobileDevice() ? "#" : getGrokRedirectUrl(query)}
+                href={isMobileDevice() ? "#" : getGrokUrl(query)}
                 onClick={handleGrokModalClick}
                 target={isMobileDevice() ? undefined : "_blank"}
                 rel={isMobileDevice() ? undefined : "noopener noreferrer"}
@@ -408,6 +486,55 @@ export default function SearchForm() {
               >
                 Default Engine
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExtensionModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-title">Open in Safari</div>
+            <p className="modal-text">
+              iOS can’t search directly in Safari—let’s fix that! Get our extension to choose your path.
+            </p>
+            <a
+              href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="download-button"
+            >
+              <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
+            </a>
+            <div className="modal-buttons" style={{ marginTop: "10px" }}>
+              <button onClick={closeExtensionModal} className="modal-button">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCopyModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-title">Open in Safari</div>
+            <p className="modal-text">
+              To search with Grok in Safari, copy the URL below and paste it into Safari’s address bar.
+            </p>
+            <p className="modal-url">
+              <a href={grokUrl} target="_blank" rel="noopener noreferrer">
+                {grokUrl}
+              </a>
+            </p>
+            {isCopied && <p className="modal-copied">Copied to clipboard!</p>}
+            <div className="modal-buttons">
+              <button onClick={() => copyToClipboard(grokUrl)} className="modal-button">
+                Copy URL
+              </button>
+              <button onClick={closeCopyModal} className="modal-button">
+                Close
+              </button>
             </div>
           </div>
         </div>
