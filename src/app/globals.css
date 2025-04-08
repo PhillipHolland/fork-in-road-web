@@ -35,6 +35,11 @@ html, body {
   overscroll-behavior-x: none;
   touch-action: pan-y; /* Allow vertical scrolling, disable pinch-to-zoom */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  /* Extend background into safe area insets */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Ensure overscroll background matches the page background in Safari */

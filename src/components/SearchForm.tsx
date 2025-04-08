@@ -112,14 +112,14 @@ export default function SearchForm() {
       // Try opening in a new tab first
       const newTab = window.open(redirectUrl, "_blank");
       if (!newTab) {
-        // Fallback to form submission to bypass Universal Links
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = redirectUrl;
-        form.target = "_blank";
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+        // Fallback to a hidden <a> tag to bypass Universal Links
+        const link = document.createElement("a");
+        link.href = redirectUrl;
+        link.target = "_blank";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     } else {
       // On desktop, open directly in a new tab

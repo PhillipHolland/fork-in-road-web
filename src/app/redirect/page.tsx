@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
+import type { NextPage } from "next";
 
 export const dynamic = "force-dynamic";
 
-export default function RedirectPage({ searchParams }: { searchParams: { q?: string } }) {
+interface RedirectPageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+const RedirectPage: NextPage<RedirectPageProps> = ({ searchParams }) => {
   const q = searchParams.q;
 
   if (q) {
-    redirect(`https://grok.com/?q=${encodeURIComponent(q)}`);
+    const query = typeof q === "string" ? q : Array.isArray(q) ? q[0] : "";
+    redirect(`https://grok.com/?q=${encodeURIComponent(query)}`);
   }
 
   return (
@@ -14,4 +20,6 @@ export default function RedirectPage({ searchParams }: { searchParams: { q?: str
       <p>Redirecting to Grok...</p>
     </div>
   );
-}
+};
+
+export default RedirectPage;

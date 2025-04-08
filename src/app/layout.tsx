@@ -19,6 +19,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <meta name="theme-color" content="#F8F7F5" />
         <meta name="apple-mobile-web-app-status-bar-style" content="#F8F7F5" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.documentElement.style.backgroundColor = "#F8F7F5";
+              document.body.style.backgroundColor = "#F8F7F5";
+            `,
+          }}
+        />
       </head>
       <body style={{ backgroundColor: "#F8F7F5", margin: 0, padding: 0 }}>
         <div
