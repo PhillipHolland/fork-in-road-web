@@ -21,11 +21,12 @@
 }
 
 html, body {
-  background: #F8F7F5 !important; /* Set background on both html and body with !important */
+  background: #F8F7F5; /* Fallback background color */
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+  height: 100%; /* Ensure full viewport height */
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -33,4 +34,10 @@ html, body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
   touch-action: pan-y; /* Allow vertical scrolling, disable pinch-to-zoom */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Ensure overscroll background matches the page background in Safari */
+html {
+  -webkit-background-color: #F8F7F5;
 }

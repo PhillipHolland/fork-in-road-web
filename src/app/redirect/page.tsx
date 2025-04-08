@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+// Disable static prerendering for this page
+export const dynamic = "force-dynamic";
+
 export default function RedirectPage() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q");

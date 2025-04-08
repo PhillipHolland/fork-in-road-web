@@ -109,12 +109,11 @@ export default function SearchForm() {
     if (isMobileDevice()) {
       // Use the redirect page to avoid Universal Links
       const redirectUrl = `/redirect?q=${encodeURIComponent(q)}`;
+      // Try opening in a new tab first
       const newTab = window.open(redirectUrl, "_blank");
       if (!newTab) {
-        const url = getGrokUrl(q);
-        setFallbackUrl(url);
-        setShowFallbackModal(true);
-        copyToClipboard(url);
+        // Fallback to navigating the current tab
+        window.location.href = redirectUrl;
       }
     } else {
       // On desktop, open directly in a new tab
@@ -155,7 +154,7 @@ export default function SearchForm() {
     } else {
       setCountdown(5); // Reset countdown when modal closes
     }
-  }, [showFallbackModal, fallbackUrl]);
+  }, [showFallbackModal, fallbackUrl, retryRedirect]);
 
   return (
     <div className="container">
