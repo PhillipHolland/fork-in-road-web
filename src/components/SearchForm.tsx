@@ -64,6 +64,7 @@ export default function SearchForm() {
   const getGrokUrl = (q: string) => {
     const url = new URL("https://grok.com/");
     url.searchParams.set("q", q);
+    url.searchParams.set("noapp", "1"); // Add a query parameter to potentially bypass Universal Links
     return url.toString();
   };
 
