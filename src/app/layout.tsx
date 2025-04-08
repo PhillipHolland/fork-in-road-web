@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react"; // Import Vercel Analytics
+import { Analytics } from "@vercel/analytics/react"; // Already added
+import { SpeedInsights } from "@vercel/speed-insights/next"; // Import Vercel Speed Insights
 
 export const metadata = {
   title: "Fork in Road: Search with Grok or Your Default Engine",
@@ -59,7 +60,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           {children}
         </div>
-        <Analytics /> {/* Add Vercel Analytics component */}
+        <Analytics /> {/* Already added */}
+        <SpeedInsights /> {/* Add Vercel Speed Insights component */}
       </body>
     </html>
   );
