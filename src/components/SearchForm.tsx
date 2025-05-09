@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { searchEngines, SearchEngine } from "@/lib/searchEngines";
 import Image from "next/image";
+import { marked } from "marked"; // Import marked for markdown parsing
+import DOMPurify from "dompurify"; // Import DOMPurify for HTML sanitization
 
 export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
@@ -188,6 +190,13 @@ export default function SearchForm() {
     closeModal();
   };
 
+  // Convert markdown to HTML and sanitize it
+  const renderMarkdown = (markdown: string) => {
+    const html = marked.parse(markdown);
+    const sanitizedHtml = DOMPurify.sanitize(html);
+    return { __html: sanitizedHtml };
+  };
+
   return (
     <div className="container">
       <style jsx>{`
@@ -300,6 +309,92 @@ export default function SearchForm() {
           text-align: left;
           font-size: 14px;
           color: #333;
+          line-height: 1.6;
+        }
+
+        /* Markdown styling for rendered HTML */
+        .results-container h1 {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 12px;
+          color: #000;
+        }
+
+        .results-container h2 {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #000;
+        }
+
+        .results-container h3 {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 8px;
+          color: #000;
+        }
+
+        .results-container p {
+          margin-bottom: 10px;
+        }
+
+        .results-container strong {
+          font-weight: bold;
+        }
+
+        .results-container em {
+          font-style: italic;
+        }
+
+        .results-container ul {
+          list-style-type: disc;
+          margin-left: 20px;
+          margin-bottom: 10px;
+        }
+
+        .results-container ol {
+          list-style-type: decimal;
+          margin-left: 20px;
+          margin-bottom: 10px;
+        }
+
+        .results-container li {
+          margin-bottom: 5px;
+        }
+
+        .results-container a {
+          color: #007bff;
+          text-decoration: underline;
+        }
+
+        .results-container a:hover {
+          color: #0056b3;
+        }
+
+        .results-container blockquote {
+          border-left: 4px solid #ccc;
+          padding-left: 10px;
+          margin: 10px 0;
+          color: #666;
+          font-style: italic;
+        }
+
+        .results-container code {
+          background: #f4f4f4;
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 13px;
+        }
+
+        .results-container pre {
+          background: #f4f4f4;
+          padding: 10px;
+          border-radius: 4px;
+          overflow-x: auto;
+          font-family: monospace;
+          font-size: 13px;
+          margin-bottom: 10px;
         }
 
         .loading-bar-container {
@@ -516,6 +611,44 @@ export default function SearchForm() {
             max-height: 200px;
           }
 
+          .results-container h1 {
+            font-size: 18px;
+            margin-bottom: 10px;
+          }
+
+          .results-container h2 {
+            font-size: 16px;
+            margin-bottom: 8px;
+          }
+
+          .results-container h3 {
+            font-size: 14px;
+            margin-bottom: 6px;
+          }
+
+          .results-container p {
+            margin-bottom: 8px;
+          }
+
+          .results-container ul,
+          .results-container ol {
+            margin-left: 15px;
+            margin-bottom: 8px;
+          }
+
+          .results-container li {
+            margin-bottom: 4px;
+          }
+
+          .results-container pre {
+            padding: 8px;
+            font-size: 12px;
+          }
+
+          .results-container code {
+            font-size: 12px;
+          }
+
           .loading-bar-container {
             width: 150px;
             height: 6px;
@@ -610,7 +743,10 @@ export default function SearchForm() {
       {error && <div className="error-message">{error}</div>}
       {grokResult && (
         <>
-          <div className="results-container">{grokResult}</div>
+          <div
+            className="results-container"
+            dangerouslySetInnerHTML={renderMarkdown(grokResult)}
+          />
           <div className="ad-container">
             <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
           </div>
