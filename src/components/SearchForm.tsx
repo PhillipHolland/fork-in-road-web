@@ -184,9 +184,7 @@ export default function SearchForm() {
 
   // Combined handler for "With Grok" button in modal
   const handleGrokModalClick = () => {
-    if (isMobileDevice()) {
-      handleGrokSearch(query);
-    }
+    handleGrokSearch(query); // Call handleGrokSearch on all devices
     closeModal();
   };
 
