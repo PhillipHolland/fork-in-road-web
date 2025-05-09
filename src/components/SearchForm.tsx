@@ -295,11 +295,18 @@ export default function SearchForm() {
     }
   };
 
-  // Handle search (used by both button click and Enter key)
+  // Handle search (used by both button click, Enter key, and magnifying glass click)
   const handleSearch = (q: string) => {
     setCurrentPage(1);
     setHasMore(true);
     fetchResults(q, 1);
+  };
+
+  // Handle magnifying glass click
+  const handleMagnifyingGlassClick = () => {
+    if (query) {
+      handleSearch(query);
+    }
   };
 
   // Handle refine submit
@@ -324,7 +331,7 @@ export default function SearchForm() {
         fetchResults(query, nextPage, true);
         return nextPage;
       });
-    }, 300); // Debounce for 300ms to prevent rapid fetches
+    }, 300);
   }, [query]);
 
   // Set up Intersection Observer for infinite scroll
@@ -532,7 +539,7 @@ export default function SearchForm() {
           box-sizing: border-box;
           background: #fff;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          transition: box-shadow 0.3s ease;
+          transition: box-shadow 0.3s ease, border-color 0.3s ease;
           touch-action: pan-y;
         }
 
@@ -540,14 +547,30 @@ export default function SearchForm() {
           box-shadow: 0 2px 8px rgba(32, 33, 36, 0.4);
         }
 
+        .search-input.has-text {
+          border-color: #e7cf2c; /* Match the progress bar color */
+        }
+
         .search-icon {
           position: absolute;
-          right: 10px;
+          right: 15px; /* Adjusted from 10px to prevent cutoff */
           top: 50%;
           transform: translateY(-50%);
           width: 20px;
           height: 20px;
           color: #666;
+          background: none;
+          border: none;
+          padding: 0;
+          font-size: 20px;
+          cursor: pointer; /* Make clickable */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .search-icon:hover {
+          color: #e7cf2c; /* Highlight on hover */
         }
 
         .suggestions {
@@ -594,14 +617,14 @@ export default function SearchForm() {
           background: #fff;
           border-radius: 10px;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          max-height: 400px; /* Increased from 300px */
+          max-height: 400px;
           overflow-y: auto;
           text-align: left;
           font-size: 14px;
           color: #333;
           line-height: 1.6;
-          will-change: transform; /* Optimize scrolling */
-          -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+          will-change: transform;
+          -webkit-overflow-scrolling: touch;
         }
 
         .results-header {
@@ -623,7 +646,7 @@ export default function SearchForm() {
           color: #000;
           margin-top: 20px;
           margin-bottom: 10px;
-          text-align: left; /* Explicitly left-justify */
+          text-align: left;
         }
 
         .url-results-container {
@@ -635,15 +658,15 @@ export default function SearchForm() {
           font-size: 14px;
           color: #333;
           line-height: 1.6;
-          max-height: 600px; /* Increased from 400px */
+          max-height: 600px;
           overflow-y: auto;
-          will-change: transform; /* Optimize scrolling */
-          -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+          will-change: transform;
+          -webkit-overflow-scrolling: touch;
         }
 
         .url-result-item {
           margin-bottom: 15px;
-          contain: content; /* Improve rendering performance */
+          contain: content;
         }
 
         .url-result-item:last-child {
@@ -655,7 +678,7 @@ export default function SearchForm() {
           font-weight: bold;
           color: #007bff;
           text-decoration: none;
-          display: block; /* Simplify layout */
+          display: block;
         }
 
         .url-result-title:hover {
@@ -667,13 +690,13 @@ export default function SearchForm() {
           color: #666;
           margin-bottom: 5px;
           word-break: break-all;
-          display: block; /* Simplify layout */
+          display: block;
         }
 
         .url-result-description {
           font-size: 14px;
           color: #333;
-          display: block; /* Simplify layout */
+          display: block;
         }
 
         .loading-more {
@@ -1109,7 +1132,8 @@ export default function SearchForm() {
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 8px;
+            right: 12px; /* Adjusted from 8px to prevent cutoff */
+            font-size: 18px;
           }
 
           .suggestion-item {
@@ -1120,15 +1144,15 @@ export default function SearchForm() {
           .results-container {
             padding: 10px;
             font-size: 12px;
-            max-height: 300px; /* Increased from 200px */
+            max-height: 300px;
           }
 
           .results-header {
-            flex-direction: row; /* Keep inline on mobile */
+            flex-direction: row;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap; /* Allow wrapping if needed */
+            flex-wrap: wrap;
           }
 
           .results-header-text {
@@ -1143,7 +1167,7 @@ export default function SearchForm() {
           .url-results-container {
             padding: 10px;
             font-size: 12px;
-            max-height: 500px; /* Increased from 300px */
+            max-height: 500px;
           }
 
           .url-result-item {
@@ -1326,13 +1350,20 @@ export default function SearchForm() {
           value={query}
           onChange={handleQueryChange}
           onKeyDown={handleKeyDown}
-          className="search-input"
+          className={`search-input ${query ? "has-text" : ""}`} // Add has-text class when query is non-empty
           placeholder="search"
           autoComplete="off"
           autoCorrect="on"
           autoCapitalize="on"
         />
-        <span className="search-icon">🔍</span>
+        <button
+          className="search-icon"
+          onClick={handleMagnifyingGlassClick}
+          disabled={!query} // Disable if no query
+          aria-label="Search"
+        >
+          🔍
+        </button>
         {showSuggestions && (
           <div className="suggestions">
             {suggestions.map((suggestion, index) => (
