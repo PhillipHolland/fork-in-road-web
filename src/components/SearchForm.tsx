@@ -16,6 +16,12 @@ interface RecentSearch {
   result: string;
 }
 
+interface BraveSearchResult {
+  title: string;
+  url: string;
+  description: string;
+}
+
 export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
@@ -24,6 +30,7 @@ export default function SearchForm() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [grokResult, setGrokResult] = useState<string>("");
+  const [braveResults, setBraveResults] = useState<BraveSearchResult[]>([]);
   const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -53,7 +60,7 @@ export default function SearchForm() {
   useEffect(() => {
     if (grokResult && originalQuery) {
       const newSearch: RecentSearch = { query: originalQuery, result: grokResult };
-      const updatedSearches = [newSearch, ...recentSearches].slice(0, 3); // Keep only the last 3
+      const updatedSearches = [newSearch, ...recentSearches].slice(0, 3);
       setRecentSearches(updatedSearches);
       try {
         localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
@@ -68,7 +75,7 @@ export default function SearchForm() {
     if (!query || query.length < 2 || query === selectedSuggestion) {
       setSuggestions([]);
       setShowSuggestions(false);
-      setHighlightedIndex(-1); // Reset highlight when suggestions are cleared
+      setHighlightedIndex(-1);
       return;
     }
 
@@ -81,7 +88,7 @@ export default function SearchForm() {
         const suggestionList = data[1] || [];
         setSuggestions(suggestionList);
         setShowSuggestions(suggestionList.length > 0);
-        setHighlightedIndex(-1); // Reset highlight when new suggestions are fetched
+        setHighlightedIndex(-1);
       } catch (error) {
         console.error("Error fetching autocomplete suggestions:", error);
         setSuggestions([]);
@@ -123,13 +130,13 @@ export default function SearchForm() {
       setDefaultEngine(storedEngine);
     } else {
       const userAgent = navigator.userAgent.toLowerCase();
-      let preselectedEngine: SearchEngine = "google"; // Default to Google
+      let preselectedEngine: SearchEngine = "google";
       if (userAgent.includes("edg")) {
-        preselectedEngine = "bing"; // Microsoft Edge often defaults to Bing
+        preselectedEngine = "bing";
       } else if (userAgent.includes("firefox")) {
-        preselectedEngine = "google"; // Firefox often defaults to Google
+        preselectedEngine = "google";
       } else if (userAgent.includes("safari") && !userAgent.includes("chrome")) {
-        preselectedEngine = "google"; // Safari often defaults to Google
+        preselectedEngine = "google";
       }
       console.log("Preselected default engine:", preselectedEngine);
       setDefaultEngine(preselectedEngine);
@@ -143,14 +150,14 @@ export default function SearchForm() {
     setSuggestions([]);
     setShowSuggestions(false);
     setSelectedSuggestion(suggestion);
-    setHighlightedIndex(-1); // Reset highlight after selection
+    setHighlightedIndex(-1);
   };
 
   // Clear selected suggestion when the user types manually
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     if (selectedSuggestion && e.target.value !== selectedSuggestion) {
-      setSelectedSuggestion(null); // Clear when user types something different
+      setSelectedSuggestion(null);
     }
   };
 
@@ -165,7 +172,7 @@ export default function SearchForm() {
     }
 
     if (e.key === "ArrowDown") {
-      e.preventDefault(); // Prevent cursor movement in the input
+      e.preventDefault();
       setHighlightedIndex((prevIndex) =>
         prevIndex < suggestions.length - 1 ? prevIndex + 1 : prevIndex
       );
@@ -208,11 +215,12 @@ export default function SearchForm() {
     setRefineInput("");
   };
 
-  // Fetch Grok 3 API result via the server-side proxy
+  // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
   const fetchGrokResult = async (q: string, refinement?: string) => {
     setIsLoading(true);
     setError("");
     setGrokResult("");
+    setBraveResults([]);
 
     try {
       let finalQuery = q;
@@ -220,7 +228,7 @@ export default function SearchForm() {
         finalQuery = `Original query: ${originalQuery}. Original result: ${grokResult}. Refine based on: ${refinement}`;
       }
 
-      const response = await fetch("/api/grok", {
+      const grokResponse = await fetch("/api/grok", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,20 +236,35 @@ export default function SearchForm() {
         body: JSON.stringify({ query: finalQuery }),
       });
 
-      console.log("Grok API Response Status:", response.status);
+      console.log("Grok API Response Status:", grokResponse.status);
 
-      const data = await response.json();
+      const grokData = await grokResponse.json();
 
-      console.log("Grok API Response Data:", data);
+      console.log("Grok API Response Data:", grokData);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch Grok response");
+      if (!grokResponse.ok) {
+        throw new Error(grokData.error || "Failed to fetch Grok response");
       }
 
-      setGrokResult(data.result || "No response received from Grok.");
+      setGrokResult(grokData.result || "No response received from Grok.");
       if (!refinement) {
-        setOriginalQuery(q); // Store the original query only for new searches
+        setOriginalQuery(q);
       }
+
+      // Fetch Brave Search results via server-side API route
+      const braveResponse = await fetch(`/api/brave-search?query=${encodeURIComponent(q)}`);
+
+      console.log("Brave API Response Status:", braveResponse.status);
+
+      const braveData = await braveResponse.json();
+
+      console.log("Brave API Response Data:", braveData);
+
+      if (!braveResponse.ok) {
+        throw new Error(braveData.error || "Failed to fetch Brave Search results");
+      }
+
+      setBraveResults(braveData);
     } catch (err) {
       console.error("Error in fetchGrokResult:", err);
       if (err instanceof Error) {
@@ -256,7 +279,7 @@ export default function SearchForm() {
 
   // Handle Grok search by fetching and displaying results locally
   const handleGrokSearch = (q: string) => {
-    fetchGrokResult(q); // Simplified: no iOS check needed
+    fetchGrokResult(q);
   };
 
   // Combined handler for "With Grok" button in modal
@@ -270,7 +293,7 @@ export default function SearchForm() {
     try {
       await navigator.clipboard.writeText(grokResult);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy text:", err);
       setError("Failed to copy text to clipboard.");
@@ -292,7 +315,6 @@ export default function SearchForm() {
         console.error("Error sharing:", err);
       }
     } else {
-      // Fallback to copying
       try {
         await navigator.clipboard.writeText(grokResult);
         setShareMessage("Share not supported; copied to clipboard instead.");
@@ -315,6 +337,7 @@ export default function SearchForm() {
   // Handle clear results
   const handleClearResults = () => {
     setGrokResult("");
+    setBraveResults([]);
     setOriginalQuery("");
     setQuery("");
     setError("");
@@ -331,6 +354,7 @@ export default function SearchForm() {
   // Handle recent search click
   const handleRecentSearchClick = (search: RecentSearch) => {
     setGrokResult(search.result);
+    setBraveResults([]);
     setOriginalQuery(search.query);
     setQuery(search.query);
     setSuggestions([]);
@@ -375,16 +399,15 @@ export default function SearchForm() {
     <div className="container">
       <style jsx>{`
         .container {
-          width: 100%; /* Take full viewport width on smaller screens */
-          max-width: 850px; /* Cap at 850px (15% narrower than 1000px) */
+          width: 100%;
+          max-width: 850px;
           margin: 0 auto;
-          padding: 20px; /* Restore original padding */
+          padding: 20px;
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-          box-sizing: border-box; /* Ensure padding is included in width */
+          box-sizing: border-box;
         }
 
-        /* Ensure the container is at least 850px wide on desktop screens */
         @media (min-width: 850px) {
           .container {
             min-width: 850px;
@@ -425,7 +448,7 @@ export default function SearchForm() {
           background: #fff;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
           transition: box-shadow 0.3s ease;
-          touch-action: pan-y; /* Ensure no zooming on touch */
+          touch-action: pan-y;
         }
 
         .search-input:hover {
@@ -475,7 +498,7 @@ export default function SearchForm() {
         }
 
         .suggestion-item-highlighted {
-          background: #f5e050; /* Lighter shade of yellow for highlight */
+          background: #f5e050;
           color: #000;
         }
 
@@ -492,6 +515,56 @@ export default function SearchForm() {
           font-size: 14px;
           color: #333;
           line-height: 1.6;
+        }
+
+        .url-results-container {
+          margin-top: 20px;
+          padding: 15px;
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          text-align: left;
+          font-size: 14px;
+          color: #333;
+          line-height: 1.6;
+        }
+
+        .url-results-header {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #000;
+        }
+
+        .url-result-item {
+          margin-bottom: 15px;
+        }
+
+        .url-result-item:last-child {
+          margin-bottom: 0;
+        }
+
+        .url-result-title {
+          font-size: 14px;
+          font-weight: bold;
+          color: #007bff;
+          text-decoration: none;
+        }
+
+        .url-result-title:hover {
+          text-decoration: underline;
+        }
+
+        .url-result-url {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 5px;
+          word-break: break-all;
+        }
+
+        .url-result-description {
+          font-size: 14px;
+          color: #333;
         }
 
         .results-header {
@@ -546,8 +619,8 @@ export default function SearchForm() {
         }
 
         .action-button:active {
-          transform: scale(0.95); /* Subtle scale-down effect on click */
-          background: #d4bc25; /* Slightly darker shade of #e7cf2c on click */
+          transform: scale(0.95);
+          background: #d4bc25;
         }
 
         .action-button svg {
@@ -578,7 +651,6 @@ export default function SearchForm() {
           color: green;
         }
 
-        /* Markdown styling for rendered HTML */
         .results-container h1 {
           font-size: 20px;
           font-weight: bold;
@@ -688,7 +760,7 @@ export default function SearchForm() {
             transform: translateX(0);
           }
           50% {
-            transform: translateX(233.33%); /* (100% container width - 30% bar width) / 30% bar width * 100 */
+            transform: translateX(233.33%);
           }
           100% {
             transform: translateX(0);
@@ -907,7 +979,7 @@ export default function SearchForm() {
 
         @media (max-width: 850px) {
           .container {
-            padding: 15px; /* Restore original padding for mobile */
+            padding: 15px;
           }
 
           .header img {
@@ -920,22 +992,22 @@ export default function SearchForm() {
           }
 
           .search-container {
-            width: 90%; /* Match the search-input width */
+            width: 90%;
             margin-left: auto;
             margin-right: auto;
           }
 
           .search-input {
-            width: 100%; /* Full width within the container */
+            width: 100%;
             padding: 8px 35px 8px 8px;
-            font-size: 16px; /* Ensure font-size is 16px to prevent iOS Safari zooming */
-            touch-action: pan-y; /* Ensure no zooming on touch */
+            font-size: 16px;
+            touch-action: pan-y;
           }
 
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 8px; /* Adjust to fit within the search bar */
+            right: 8px;
           }
 
           .suggestion-item {
@@ -947,6 +1019,33 @@ export default function SearchForm() {
             padding: 10px;
             font-size: 12px;
             max-height: 200px;
+          }
+
+          .url-results-container {
+            padding: 10px;
+            font-size: 12px;
+          }
+
+          .url-results-header {
+            font-size: 14px;
+            margin-bottom: 8px;
+          }
+
+          .url-result-item {
+            margin-bottom: 10px;
+          }
+
+          .url-result-title {
+            font-size: 12px;
+          }
+
+          .url-result-url {
+            font-size: 10px;
+            margin-bottom: 4px;
+          }
+
+          .url-result-description {
+            font-size: 12px;
           }
 
           .results-header {
@@ -1053,7 +1152,7 @@ export default function SearchForm() {
           .refine-modal-input {
             padding: 8px;
             font-size: 14px;
-            max-width: 100%; /* Adjust for smaller modal */
+            max-width: 100%;
           }
 
           .loading-bar-container {
@@ -1269,6 +1368,25 @@ export default function SearchForm() {
               <pre>{grokResult}</pre>
             )}
           </div>
+          {braveResults.length > 0 && (
+            <div className="url-results-container">
+              <div className="url-results-header">Web Results</div>
+              {braveResults.map((result, index) => (
+                <div key={index} className="url-result-item">
+                  <a
+                    href={result.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="url-result-title"
+                  >
+                    {result.title}
+                  </a>
+                  <div className="url-result-url">{result.url}</div>
+                  <div className="url-result-description">{result.description}</div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="feedback-section">
             <span
               className="feedback-button"
