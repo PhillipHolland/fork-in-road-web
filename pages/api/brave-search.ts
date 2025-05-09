@@ -1,5 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+// Define the shape of a single Brave Search result
+interface BraveSearchResult {
+  title: string;
+  url: string;
+  description: string;
+  [key: string]: unknown; // Allow for additional properties
+}
+
+// Define the shape of the Brave Search API response
+interface BraveSearchResponse {
+  web?: {
+    results: BraveSearchResult[];
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { query } = req.query;
 
@@ -22,9 +37,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Failed to fetch Brave Search results");
     }
 
-    const braveData = await braveResponse.json();
+    const braveData: BraveSearchResponse = await braveResponse.json();
     const webResults = braveData.web?.results || [];
-    const formattedResults = webResults.map((result: any) => ({
+    const formattedResults = webResults.map((result) => ({
       title: result.title,
       url: result.url,
       description: result.description,

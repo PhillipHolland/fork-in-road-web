@@ -60,13 +60,15 @@ export default function SearchForm() {
   useEffect(() => {
     if (grokResult && originalQuery) {
       const newSearch: RecentSearch = { query: originalQuery, result: grokResult };
-      const updatedSearches = [newSearch, ...recentSearches].slice(0, 3);
-      setRecentSearches(updatedSearches);
-      try {
-        localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
-      } catch (err) {
-        console.error("Error saving recent searches to localStorage:", err);
-      }
+      setRecentSearches((prevSearches) => {
+        const updatedSearches = [newSearch, ...prevSearches].slice(0, 3);
+        try {
+          localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+        } catch (err) {
+          console.error("Error saving recent searches to localStorage:", err);
+        }
+        return updatedSearches;
+      });
     }
   }, [grokResult, originalQuery]);
 
