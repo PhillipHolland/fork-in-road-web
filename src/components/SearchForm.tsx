@@ -137,13 +137,14 @@ export default function SearchForm() {
     };
   }, []);
 
-  // Handle suggestion selection
+  // Handle suggestion selection and trigger search
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);
     setSuggestions([]);
     setShowSuggestions(false);
     setSelectedSuggestion(suggestion);
     setHighlightedIndex(-1);
+    handleSearch(suggestion); // Trigger search immediately
   };
 
   // Clear selected suggestion when the user types manually
@@ -296,7 +297,7 @@ export default function SearchForm() {
     }
   };
 
-  // Handle search (used by both button click, Enter key, and magnifying glass click)
+  // Handle search (used by both button click, Enter key, magnifying glass click, and autocomplete selection)
   const handleSearch = (q: string) => {
     setCurrentPage(1);
     setHasMore(true);
@@ -581,7 +582,7 @@ export default function SearchForm() {
 
         .loading-bar-container {
           position: absolute;
-          bottom: -16px; /* Position directly below the search bar */
+          bottom: -16px;
           left: 50%;
           transform: translateX(-50%);
           width: 200px;
@@ -623,7 +624,7 @@ export default function SearchForm() {
           z-index: 1000;
           max-height: 200px;
           overflow-y: auto;
-          margin-top: 20px; /* Add margin to avoid overlap with loading bar */
+          margin-top: 20px;
         }
 
         .suggestion-item {
@@ -987,6 +988,10 @@ export default function SearchForm() {
           background: #f0f0f0;
         }
 
+        .show-history-container {
+          text-align: left; /* Left-justify the Show History button */
+        }
+
         .show-history-button {
           padding: 4px 8px;
           background: #f0f0f0;
@@ -1034,7 +1039,7 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
-          margin-top: 20px; /* Add margin to avoid overlap with loading bar */
+          margin-top: 10px; /* Reduced from 20px to decrease padding */
         }
 
         .search-button {
@@ -1119,6 +1124,7 @@ export default function SearchForm() {
 
         .download-section {
           margin-top: 20px;
+          text-align: center;
         }
 
         .download-text {
@@ -1129,6 +1135,22 @@ export default function SearchForm() {
 
         .download-button {
           display: inline-block;
+        }
+
+        .powered-by {
+          margin-top: 10px;
+          font-size: 12px;
+          color: #666;
+          text-align: center;
+        }
+
+        .powered-by a {
+          color: #007bff;
+          text-decoration: none;
+        }
+
+        .powered-by a:hover {
+          text-decoration: underline;
         }
 
         @media (max-width: 850px) {
@@ -1166,13 +1188,13 @@ export default function SearchForm() {
           }
 
           .loading-bar-container {
-            bottom: -14px; /* Adjust for mobile */
+            bottom: -14px;
             width: 150px;
             height: 6px;
           }
 
           .suggestions {
-            margin-top: 18px; /* Adjust for smaller loading bar */
+            margin-top: 18px;
           }
 
           .suggestion-item {
@@ -1337,7 +1359,7 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: 18px; /* Adjust for smaller loading bar */
+            margin-top: 8px; /* Reduced from 18px to decrease padding */
             margin-bottom: 15px;
           }
 
@@ -1374,6 +1396,10 @@ export default function SearchForm() {
           .download-text {
             font-size: 12px;
             margin-bottom: 8px;
+          }
+
+          .powered-by {
+            font-size: 10px;
           }
         }
       `}</style>
@@ -1425,7 +1451,7 @@ export default function SearchForm() {
       </div>
 
       {recentSearches.length > 0 && (
-        <div>
+        <div className="show-history-container">
           <button className="show-history-button" onClick={toggleHistory}>
             {showHistory ? "Hide History" : "Show History"}
           </button>
@@ -1637,6 +1663,16 @@ export default function SearchForm() {
         >
           <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
         </a>
+        <div className="powered-by">
+          Powered by{" "}
+          <a href="https://grok.ai" target="_blank" rel="noopener noreferrer">
+            Grok
+          </a>{" "}
+          and{" "}
+          <a href="https://brave.com" target="_blank" rel="noopener noreferrer">
+            Brave
+          </a>
+        </div>
       </div>
     </div>
   );
