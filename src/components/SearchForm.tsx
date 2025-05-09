@@ -144,7 +144,7 @@ export default function SearchForm() {
     setShowSuggestions(false);
     setSelectedSuggestion(suggestion);
     setHighlightedIndex(-1);
-    handleSearch(suggestion); // Trigger search immediately
+    handleSearch(suggestion);
   };
 
   // Clear selected suggestion when the user types manually
@@ -989,7 +989,7 @@ export default function SearchForm() {
         }
 
         .show-history-container {
-          text-align: left; /* Left-justify the Show History button */
+          text-align: left;
         }
 
         .show-history-button {
@@ -1039,7 +1039,11 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
-          margin-top: 10px; /* Reduced from 20px to decrease padding */
+          margin-top: ${isLoading ? "0px" : "10px"}; /* Adjust margin-top based on isLoading */
+        }
+
+        .search-buttons.loading {
+          margin-top: -8px; /* Position just below progress bar: -16px (progress bar bottom) + 8px (progress bar height) + 4px (gap) */
         }
 
         .search-button {
@@ -1359,8 +1363,12 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: 8px; /* Reduced from 18px to decrease padding */
+            margin-top: ${isLoading ? "-2px" : "8px"}; /* -14px (progress bar bottom) + 6px (progress bar height) + 4px (gap) */
             margin-bottom: 15px;
+          }
+
+          .search-buttons.loading {
+            margin-top: -8px; /* Adjust for mobile progress bar height */
           }
 
           .search-button {
@@ -1477,7 +1485,7 @@ export default function SearchForm() {
         </div>
       )}
 
-      <div className="search-buttons">
+      <div className={`search-buttons ${isLoading ? "loading" : ""}`}>
         <button
           onClick={() => handleSearch(query)}
           className={`search-button ${!query ? "button-disabled" : ""}`}
