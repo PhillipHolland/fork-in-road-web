@@ -6,6 +6,11 @@ import Image from "next/image";
 import { marked } from "marked"; // Import marked for markdown parsing
 import DOMPurify from "dompurify"; // Import DOMPurify for HTML sanitization
 
+// Configure marked to run synchronously
+marked.setOptions({
+  async: false,
+});
+
 export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
@@ -190,9 +195,9 @@ export default function SearchForm() {
     closeModal();
   };
 
-  // Convert markdown to HTML and sanitize it
+  // Convert markdown to HTML and sanitize it (synchronous)
   const renderMarkdown = (markdown: string) => {
-    const html = marked.parse(markdown);
+    const html = marked.parse(markdown) as string; // Type assertion since async: false
     const sanitizedHtml = DOMPurify.sanitize(html);
     return { __html: sanitizedHtml };
   };
