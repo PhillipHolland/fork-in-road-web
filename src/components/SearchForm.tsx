@@ -45,9 +45,10 @@ export default function SearchForm() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
-  // Ref for the bottom of the url-results-container
+  // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -247,7 +248,17 @@ export default function SearchForm() {
         append ? [...prevResults, ...(braveData.results || [])] : braveData.results || []
       );
       setTotalResults(braveData.total || 0);
-      setHasMore(braveData.results.length === resultsPerPage && (page * resultsPerPage) < (braveData.total || 0));
+
+      // Log debugging info
+      console.log("Fetch Results Debug:", {
+        page,
+        resultsLength: braveData.results.length,
+        total: braveData.total,
+        currentTotalResults: (page * resultsPerPage),
+        hasMore: braveData.results.length > 0 && (page * resultsPerPage) < (braveData.total || 0),
+      });
+
+      setHasMore(braveData.results.length > 0 && (page * resultsPerPage) < (braveData.total || 0));
     } catch (err) {
       console.error("Error in fetchResults:", err);
       if (err instanceof Error) {
@@ -282,9 +293,15 @@ export default function SearchForm() {
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
+      console.log("IntersectionObserver Triggered:", {
+        isIntersecting: target.isIntersecting,
+        hasMore,
+        isLoadingMore,
+      });
       if (target.isIntersecting && hasMore && !isLoadingMore) {
         setCurrentPage((prevPage) => {
           const nextPage = prevPage + 1;
+          console.log("Fetching page:", nextPage);
           fetchResults(query, nextPage, true);
           return nextPage;
         });
@@ -294,12 +311,17 @@ export default function SearchForm() {
   );
 
   useEffect(() => {
-    if (!loadMoreRef.current) return;
+    if (!loadMoreRef.current || !containerRef.current) return;
+
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
     observerRef.current = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: "100px",
-      threshold: 0.1,
+      root: containerRef.current, // Use the container as the root
+      rootMargin: "0px", // Trigger when the loadMoreRef is 0px from the bottom
+      threshold: 0.1, // Trigger when 10% of the loadMoreRef is visible
     });
 
     if (loadMoreRef.current) {
@@ -1408,7 +1430,7 @@ export default function SearchForm() {
             )}
           </div>
           {braveResults.length > 0 && (
-            <div className="url-results-container">
+            <div className="url-results-container" ref={containerRef}>
               <div className="url-results-header">Web Results</div>
               {braveResults.map((result, index) => (
                 <div key={`${result.url}-${index}`} className="url-result-item">
@@ -1424,11 +1446,9 @@ export default function SearchForm() {
                   <div className="url-result-description">{result.description}</div>
                 </div>
               ))}
-              {hasMore && (
-                <div className="loading-more" ref={loadMoreRef}>
-                  {isLoadingMore ? "Loading more..." : ""}
-                </div>
-              )}
+              <div className="loading-more" ref={loadMoreRef}>
+                {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
+              </div>
             </div>
           )}
           <div className="feedback-section">
