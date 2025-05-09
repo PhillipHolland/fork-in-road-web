@@ -46,7 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [showHistory, setShowHistory] = useState<boolean>(false); // New state for toggling history visibility
+  const [showHistory, setShowHistory] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -579,6 +579,38 @@ export default function SearchForm() {
           color: #e7cf2c;
         }
 
+        .loading-bar-container {
+          position: absolute;
+          bottom: -16px; /* Position directly below the search bar */
+          left: 50%;
+          transform: translateX(-50%);
+          width: 200px;
+          height: 8px;
+          background: #eee;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .loading-bar {
+          width: 30%;
+          height: 100%;
+          background: #e7cf2c;
+          border-radius: 4px;
+          animation: cylon 1.5s infinite ease-in-out;
+        }
+
+        @keyframes cylon {
+          0% {
+            transform: translateX(0);
+          }
+          50% {
+            transform: translateX(233.33%);
+          }
+          100% {
+            transform: translateX(0);
+          }
+        }
+
         .suggestions {
           position: absolute;
           top: 100%;
@@ -591,6 +623,7 @@ export default function SearchForm() {
           z-index: 1000;
           max-height: 200px;
           overflow-y: auto;
+          margin-top: 20px; /* Add margin to avoid overlap with loading bar */
         }
 
         .suggestion-item {
@@ -874,37 +907,6 @@ export default function SearchForm() {
           white-space: pre-wrap;
         }
 
-        .loading-bar-container {
-          margin-top: 20px;
-          width: 200px;
-          height: 8px;
-          background: #eee;
-          border-radius: 4px;
-          overflow: hidden;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .loading-bar {
-          width: 30%;
-          height: 100%;
-          background: #e7cf2c;
-          border-radius: 4px;
-          animation: cylon 1.5s infinite ease-in-out;
-        }
-
-        @keyframes cylon {
-          0% {
-            transform: translateX(0);
-          }
-          50% {
-            transform: translateX(233.33%);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-
         .error-message {
           margin-top: 20px;
           padding: 10px;
@@ -1032,6 +1034,7 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
+          margin-top: 20px; /* Add margin to avoid overlap with loading bar */
         }
 
         .search-button {
@@ -1160,6 +1163,16 @@ export default function SearchForm() {
             height: 18px;
             right: 12px;
             font-size: 18px;
+          }
+
+          .loading-bar-container {
+            bottom: -14px; /* Adjust for mobile */
+            width: 150px;
+            height: 6px;
+          }
+
+          .suggestions {
+            margin-top: 18px; /* Adjust for smaller loading bar */
           }
 
           .suggestion-item {
@@ -1323,9 +1336,14 @@ export default function SearchForm() {
             max-width: 100%;
           }
 
-          .loading-bar-container {
-            width: 150px;
-            height: 6px;
+          .search-buttons {
+            margin-top: 18px; /* Adjust for smaller loading bar */
+            margin-bottom: 15px;
+          }
+
+          .search-button {
+            padding: 8px 15px;
+            font-size: 14px;
           }
 
           .error-message {
@@ -1336,15 +1354,6 @@ export default function SearchForm() {
           .ad-placeholder {
             font-size: 10px;
             padding: 8px;
-          }
-
-          .search-buttons {
-            margin-bottom: 15px;
-          }
-
-          .search-button {
-            padding: 8px 15px;
-            font-size: 14px;
           }
 
           .modal-content {
@@ -1395,6 +1404,11 @@ export default function SearchForm() {
         >
           🔍
         </button>
+        {isLoading && (
+          <div className="loading-bar-container">
+            <div className="loading-bar"></div>
+          </div>
+        )}
         {showSuggestions && (
           <div className="suggestions">
             {suggestions.map((suggestion, index) => (
@@ -1447,11 +1461,6 @@ export default function SearchForm() {
         </button>
       </div>
 
-      {isLoading && (
-        <div className="loading-bar-container">
-          <div className="loading-bar"></div>
-        </div>
-      )}
       {error && <div className="error-message">{error}</div>}
       {grokResult && (
         <>
