@@ -3,24 +3,64 @@
 import { useState, useEffect } from "react";
 import { searchEngines, SearchEngine } from "@/lib/searchEngines";
 import Image from "next/image";
-import { marked } from "marked"; // Import marked for markdown parsing
-import DOMPurify from "dompurify"; // Import DOMPurify for HTML sanitization
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 // Configure marked to run synchronously
 marked.setOptions({
   async: false,
 });
 
+interface RecentSearch {
+  query: string;
+  result: string;
+}
+
 export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
+  const [showRefineModal, setShowRefineModal] = useState<boolean>(false); // New state for refine modal
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [grokResult, setGrokResult] = useState<string>("");
+  const [originalQuery, setOriginalQuery] = useState<string>(""); // Store original query for refinement
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [isCopied, setIsCopied] = useState<boolean>(false); // State for copy confirmation
+  const [shareMessage, setShareMessage] = useState<string>(""); // State for share fallback message
+  const [refineInput, setRefineInput] = useState<string>(""); // State for refine input
+  const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered"); // State for toggle view
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]); // State for recent searches
+  const [feedbackMessage, setFeedbackMessage] = useState<string>(""); // State for feedback message
+
+  // Load recent searches from localStorage on mount
+  useEffect(() => {
+    const storedSearches = localStorage.getItem("recentSearches");
+    if (storedSearches) {
+      try {
+        setRecentSearches(JSON.parse(storedSearches));
+      } catch (err) {
+        console.error("Error parsing recent searches from localStorage:", err);
+        setRecentSearches([]);
+      }
+    }
+  }, []);
+
+  // Save recent searches to localStorage when they change
+  useEffect(() => {
+    if (grokResult && originalQuery) {
+      const newSearch: RecentSearch = { query: originalQuery, result: grokResult };
+      const updatedSearches = [newSearch, ...recentSearches].slice(0, 3); // Keep only the last 3
+      setRecentSearches(updatedSearches);
+      try {
+        localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
+      } catch (err) {
+        console.error("Error saving recent searches to localStorage:", err);
+      }
+    }
+  }, [grokResult, originalQuery]);
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -139,19 +179,29 @@ export default function SearchForm() {
     fetchGrokResult(query);
   };
 
+  const closeRefineModal = () => {
+    setShowRefineModal(false);
+    setRefineInput("");
+  };
+
   // Fetch Grok 3 API result via the server-side proxy
-  const fetchGrokResult = async (q: string) => {
+  const fetchGrokResult = async (q: string, refinement?: string) => {
     setIsLoading(true);
     setError("");
     setGrokResult("");
 
     try {
+      let finalQuery = q;
+      if (refinement && originalQuery && grokResult) {
+        finalQuery = `Original query: ${originalQuery}. Original result: ${grokResult}. Refine based on: ${refinement}`;
+      }
+
       const response = await fetch("/api/grok", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: q }),
+        body: JSON.stringify({ query: finalQuery }),
       });
 
       console.log("Grok API Response Status:", response.status);
@@ -165,6 +215,9 @@ export default function SearchForm() {
       }
 
       setGrokResult(data.result || "No response received from Grok.");
+      if (!refinement) {
+        setOriginalQuery(q); // Store the original query only for new searches
+      }
     } catch (err) {
       console.error("Error in fetchGrokResult:", err);
       if (err instanceof Error) {
@@ -185,19 +238,110 @@ export default function SearchForm() {
       setShowExtensionModal(true);
       sessionStorage.setItem("hasShownExtensionModal", "true");
     } else {
-      fetchGrokResult(q); // Fetch and display results locally
+      fetchGrokResult(q);
     }
   };
 
   // Combined handler for "With Grok" button in modal
   const handleGrokModalClick = () => {
-    handleGrokSearch(query); // Call handleGrokSearch on all devices
+    handleGrokSearch(query);
     closeModal();
+  };
+
+  // Handle copy button click
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(grokResult);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+      setError("Failed to copy text to clipboard.");
+    }
+  };
+
+  // Handle share button click
+  const handleShare = async () => {
+    const shareData = {
+      title: "Fork in Road Search Result",
+      text: grokResult,
+      url: "https://forkinroad.app",
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      // Fallback to copying
+      try {
+        await navigator.clipboard.writeText(grokResult);
+        setShareMessage("Share not supported; copied to clipboard instead.");
+        setTimeout(() => setShareMessage(""), 2000);
+      } catch (err) {
+        console.error("Failed to copy text:", err);
+        setError("Failed to copy text to clipboard.");
+      }
+    }
+  };
+
+  // Handle refine submit
+  const handleRefineSubmit = () => {
+    if (refineInput.trim()) {
+      fetchGrokResult(query, refineInput);
+      closeRefineModal();
+    }
+  };
+
+  // Handle clear results
+  const handleClearResults = () => {
+    setGrokResult("");
+    setOriginalQuery("");
+    setQuery("");
+    setError("");
+    setIsLoading(false);
+    setIsCopied(false);
+    setShareMessage("");
+    setFeedbackMessage("");
+  };
+
+  // Handle recent search click
+  const handleRecentSearchClick = (search: RecentSearch) => {
+    setGrokResult(search.result);
+    setOriginalQuery(search.query);
+    setQuery(search.query);
+  };
+
+  // Clear recent searches
+  const handleClearHistory = () => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem("recentSearches");
+    } catch (err) {
+      console.error("Error clearing recent searches from localStorage:", err);
+    }
+  };
+
+  // Handle feedback (thumbs up/down)
+  const handleFeedback = (rating: "up" | "down") => {
+    try {
+      const feedback = { query: originalQuery, result: grokResult, rating, timestamp: Date.now() };
+      const existingFeedback = localStorage.getItem("feedback");
+      const feedbackArray = existingFeedback ? JSON.parse(existingFeedback) : [];
+      feedbackArray.push(feedback);
+      localStorage.setItem("feedback", JSON.stringify(feedbackArray));
+    } catch (err) {
+      console.error("Error saving feedback to localStorage:", err);
+    }
+    setFeedbackMessage("Thanks for your feedback!");
+    setTimeout(() => setFeedbackMessage(""), 2000);
   };
 
   // Convert markdown to HTML and sanitize it (synchronous)
   const renderMarkdown = (markdown: string) => {
-    const html = marked.parse(markdown) as string; // Type assertion since async: false
+    const html = marked.parse(markdown) as string;
     const sanitizedHtml = DOMPurify.sanitize(html);
     return { __html: sanitizedHtml };
   };
@@ -304,6 +448,7 @@ export default function SearchForm() {
         }
 
         .results-container {
+          position: relative;
           margin-top: 20px;
           padding: 15px;
           background: #fff;
@@ -315,6 +460,84 @@ export default function SearchForm() {
           font-size: 14px;
           color: #333;
           line-height: 1.6;
+        }
+
+        .results-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .view-toggle {
+          font-size: 14px;
+          color: #666;
+        }
+
+        .view-toggle span {
+          cursor: pointer;
+          padding: 2px 5px;
+          border-radius: 4px;
+          transition: background 0.2s;
+        }
+
+        .view-toggle span.active {
+          background: #e7cf2c;
+          color: #000;
+        }
+
+        .view-toggle span:hover {
+          background: #f0f0f0;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 8px;
+        }
+
+        .action-button {
+          display: flex;
+          align-items: center;
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .action-button:hover {
+          background: #e0e0e0;
+        }
+
+        .action-button svg {
+          margin-right: 4px;
+        }
+
+        .feedback-section {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .feedback-button {
+          cursor: pointer;
+          color: #666;
+          font-size: 20px;
+          transition: color 0.2s;
+        }
+
+        .feedback-button:hover {
+          color: #000;
+        }
+
+        .feedback-message {
+          font-size: 12px;
+          color: green;
         }
 
         /* Markdown styling for rendered HTML */
@@ -400,6 +623,7 @@ export default function SearchForm() {
           font-family: monospace;
           font-size: 13px;
           margin-bottom: 10px;
+          white-space: pre-wrap;
         }
 
         .loading-bar-container {
@@ -457,6 +681,63 @@ export default function SearchForm() {
           border: 1px solid #eee;
           border-radius: 5px;
           display: inline-block;
+        }
+
+        .recent-searches {
+          margin-top: 10px;
+          margin-bottom: 20px;
+          text-align: left;
+        }
+
+        .recent-searches-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .recent-searches-title {
+          font-size: 14px;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .clear-history {
+          font-size: 12px;
+          color: #007bff;
+          cursor: pointer;
+          text-decoration: underline;
+        }
+
+        .clear-history:hover {
+          color: #0056b3;
+        }
+
+        .recent-search-item {
+          padding: 8px;
+          background: #f9f9f9;
+          border: 1px solid #eee;
+          border-radius: 4px;
+          margin-bottom: 5px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .recent-search-item:hover {
+          background: #f0f0f0;
+        }
+
+        .refine-modal-input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 14px;
+          margin-bottom: 10px;
         }
 
         .search-label {
@@ -616,6 +897,46 @@ export default function SearchForm() {
             max-height: 200px;
           }
 
+          .results-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+
+          .view-toggle {
+            font-size: 12px;
+          }
+
+          .action-buttons {
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            width: 100%;
+          }
+
+          .action-button {
+            padding: 3px 6px;
+            font-size: 10px;
+          }
+
+          .action-button svg {
+            margin-right: 3px;
+            width: 14px;
+            height: 14px;
+          }
+
+          .feedback-section {
+            gap: 8px;
+          }
+
+          .feedback-button {
+            font-size: 16px;
+          }
+
+          .feedback-message {
+            font-size: 10px;
+          }
+
           .results-container h1 {
             font-size: 18px;
             margin-bottom: 10px;
@@ -652,6 +973,30 @@ export default function SearchForm() {
 
           .results-container code {
             font-size: 12px;
+          }
+
+          .recent-searches {
+            margin-bottom: 15px;
+          }
+
+          .recent-searches-title {
+            font-size: 12px;
+          }
+
+          .clear-history {
+            font-size: 10px;
+          }
+
+          .recent-search-item {
+            padding: 6px;
+            font-size: 12px;
+            margin-bottom: 4px;
+          }
+
+          .refine-modal-input {
+            padding: 6px;
+            font-size: 12px;
+            margin-bottom: 8px;
           }
 
           .loading-bar-container {
@@ -720,7 +1065,7 @@ export default function SearchForm() {
           onKeyPress={handleKeyPress}
           className="search-input"
           placeholder="search"
-          autoComplete="off" // Disable browser autocomplete to avoid conflicts
+          autoComplete="off"
           autoCorrect="on"
           autoCapitalize="on"
         />
@@ -740,6 +1085,26 @@ export default function SearchForm() {
         )}
       </div>
 
+      {recentSearches.length > 0 && (
+        <div className="recent-searches">
+          <div className="recent-searches-header">
+            <div className="recent-searches-title">Recent Searches</div>
+            <div className="clear-history" onClick={handleClearHistory}>
+              Clear History
+            </div>
+          </div>
+          {recentSearches.map((search, index) => (
+            <div
+              key={index}
+              className="recent-search-item"
+              onClick={() => handleRecentSearchClick(search)}
+            >
+              {search.query}
+            </div>
+          ))}
+        </div>
+      )}
+
       {isLoading && (
         <div className="loading-bar-container">
           <div className="loading-bar"></div>
@@ -748,14 +1113,156 @@ export default function SearchForm() {
       {error && <div className="error-message">{error}</div>}
       {grokResult && (
         <>
+          <div className="results-header">
+            <div className="view-toggle">
+              View as:
+              <span
+                className={viewMode === "rendered" ? "active" : ""}
+                onClick={() => setViewMode("rendered")}
+              >
+                Rendered
+              </span>
+              |
+              <span
+                className={viewMode === "raw" ? "active" : ""}
+                onClick={() => setViewMode("raw")}
+              >
+                Raw
+              </span>
+            </div>
+            <div className="action-buttons">
+              <div className="action-button" onClick={handleCopy}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                {isCopied ? "Copied!" : "Copy"}
+              </div>
+              <div className="action-button" onClick={handleShare}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                {shareMessage || "Share"}
+              </div>
+              <div className="action-button" onClick={() => setShowRefineModal(true)}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Refine
+              </div>
+              <div className="action-button" onClick={handleClearResults}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                Clear
+              </div>
+            </div>
+          </div>
           <div
             className="results-container"
-            dangerouslySetInnerHTML={renderMarkdown(grokResult)}
-          />
+            style={viewMode === "raw" ? { whiteSpace: "pre-wrap" } : {}}
+          >
+            {viewMode === "rendered" ? (
+              <div dangerouslySetInnerHTML={renderMarkdown(grokResult)} />
+            ) : (
+              <pre>{grokResult}</pre>
+            )}
+          </div>
+          <div className="feedback-section">
+            <span
+              className="feedback-button"
+              onClick={() => handleFeedback("up")}
+              role="img"
+              aria-label="Thumbs Up"
+            >
+              👍
+            </span>
+            <span
+              className="feedback-button"
+              onClick={() => handleFeedback("down")}
+              role="img"
+              aria-label="Thumbs Down"
+            >
+              👎
+            </span>
+            {feedbackMessage && <span className="feedback-message">{feedbackMessage}</span>}
+          </div>
           <div className="ad-container">
             <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
           </div>
         </>
+      )}
+
+      {showRefineModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-title">Refine Your Result</div>
+            <input
+              type="text"
+              className="refine-modal-input"
+              value={refineInput}
+              onChange={(e) => setRefineInput(e.target.value)}
+              placeholder="Enter refinement instruction (e.g., 'Make it shorter')"
+            />
+            <div className="modal-buttons">
+              <button onClick={handleRefineSubmit} className="modal-button">
+                Submit
+              </button>
+              <button onClick={closeRefineModal} className="modal-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="search-label">search with...</div>
@@ -764,7 +1271,7 @@ export default function SearchForm() {
         <a
           href="#"
           onClick={(e) => {
-            e.preventDefault(); // Prevent default navigation on all devices
+            e.preventDefault();
             if (query) {
               handleGrokSearch(query);
             }
@@ -791,7 +1298,7 @@ export default function SearchForm() {
               <a
                 href="#"
                 onClick={(e) => {
-                  e.preventDefault(); // Prevent default navigation on all devices
+                  e.preventDefault();
                   handleGrokModalClick();
                 }}
                 className="modal-button"
