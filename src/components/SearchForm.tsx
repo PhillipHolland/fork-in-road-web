@@ -34,6 +34,7 @@ export default function SearchForm() {
   const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
+  const [isAutocompleteSelection, setIsAutocompleteSelection] = useState<boolean>(false); // New state
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -64,9 +65,12 @@ export default function SearchForm() {
 
   // Fetch autocomplete suggestions from Wikipedia's API
   useEffect(() => {
-    if (!query || query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
+    if (!query || query.length < 2 || isAutocompleteSelection) {
+      if (!isAutocompleteSelection) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+      setIsAutocompleteSelection(false); // Reset the flag after skipping
       return;
     }
 
@@ -76,7 +80,7 @@ export default function SearchForm() {
           `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`
         );
         const data = await response.json();
-        const suggestionList = data[1] || []; // data[1] contains the suggestions
+        const suggestionList = data[1] || [];
         setSuggestions(suggestionList);
         setShowSuggestions(suggestionList.length > 0);
       } catch (error) {
@@ -84,10 +88,10 @@ export default function SearchForm() {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300); // Debounce to avoid excessive API calls
+    }, 300);
 
     return () => clearTimeout(debounceFetch);
-  }, [query]);
+  }, [query, isAutocompleteSelection]);
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -136,8 +140,9 @@ export default function SearchForm() {
   // Handle suggestion selection
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);
-    setSuggestions([]); // Clear suggestions
-    setShowSuggestions(false); // Hide suggestions until new typing
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsAutocompleteSelection(true); // Set flag to skip fetch
   };
 
   // Ensure defaultEngine is never null
@@ -313,8 +318,9 @@ export default function SearchForm() {
     setGrokResult(search.result);
     setOriginalQuery(search.query);
     setQuery(search.query);
-    setSuggestions([]); // Clear suggestions
-    setShowSuggestions(false); // Hide suggestions
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsAutocompleteSelection(true); // Set flag to skip fetch
   };
 
   // Clear recent searches
