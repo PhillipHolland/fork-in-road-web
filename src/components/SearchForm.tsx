@@ -8,15 +8,12 @@ export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [showCopyModal, setShowCopyModal] = useState<boolean>(false);
   const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
-  const [grokUrl, setGrokUrl] = useState<string>("");
-  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [grokResult, setGrokResult] = useState<string>(""); // State for Grok API result
-  const [isLoading, setIsLoading] = useState<boolean>(false); // State for loading indicator
-  const [error, setError] = useState<string>(""); // State for error messages
+  const [grokResult, setGrokResult] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -135,31 +132,10 @@ export default function SearchForm() {
     setShowModal(false);
   };
 
-  const closeCopyModal = () => {
-    setShowCopyModal(false);
-    setGrokUrl("");
-    setIsCopied(false);
-    // Reset the sessionStorage flag so the extension modal reappears on the next "Search with Grok" click
-    sessionStorage.removeItem("hasShownExtensionModal");
-  };
-
   const closeExtensionModal = () => {
     setShowExtensionModal(false);
     // Proceed to fetch and display Grok results after closing
     fetchGrokResult(query);
-  };
-
-  // Attempt to copy the URL to the clipboard
-  const copyToClipboard = (text: string) => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        console.log("URL copied to clipboard:", text);
-        setIsCopied(true);
-      }).catch(err => {
-        console.error("Failed to copy URL to clipboard:", err);
-        setIsCopied(false);
-      });
-    }
   };
 
   // Fetch Grok 3 API result via the server-side proxy
@@ -177,15 +153,19 @@ export default function SearchForm() {
         body: JSON.stringify({ query: q }),
       });
 
+      console.log("Grok API Response Status:", response.status);
+
       const data = await response.json();
+
+      console.log("Grok API Response Data:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch Grok response");
       }
 
-      setGrokResult(data.result);
+      setGrokResult(data.result || "No response received from Grok.");
     } catch (err) {
-      // Use type guard to safely access err.message
+      console.error("Error in fetchGrokResult:", err);
       if (err instanceof Error) {
         setError(err.message || "An error occurred while fetching the response.");
       } else {
@@ -196,11 +176,8 @@ export default function SearchForm() {
     }
   };
 
-  // Handle Grok search by showing a modal with the URL to copy
+  // Handle Grok search by fetching and displaying results locally
   const handleGrokSearch = (q: string) => {
-    const url = getGrokUrl(q);
-    setGrokUrl(url);
-
     // Check if the user is on iOS/iPadOS and if the extension modal has been shown this session
     const hasShownExtensionModal = sessionStorage.getItem("hasShownExtensionModal");
     if (isIOSDevice() && !hasShownExtensionModal) {
@@ -335,14 +312,20 @@ export default function SearchForm() {
 
         .loading-spinner {
           margin-top: 20px;
-          font-size: 14px;
+          font-size: 16px;
+          font-weight: bold;
           color: #666;
           text-align: center;
         }
 
         .error-message {
           margin-top: 20px;
-          font-size: 14px;
+          padding: 10px;
+          background: #ffe6e6;
+          border: 1px solid #ff0000;
+          border-radius: 5px;
+          font-size: 16px;
+          font-weight: bold;
           color: #ff0000;
           text-align: center;
         }
@@ -460,19 +443,6 @@ export default function SearchForm() {
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .modal-url {
-          margin: 10px 0;
-          word-break: break-all;
-          font-size: 14px;
-          color: #000;
-        }
-
-        .modal-copied {
-          margin: 10px 0;
-          font-size: 14px;
-          color: green;
-        }
-
         .download-section {
           margin-top: 20px;
         }
@@ -532,11 +502,12 @@ export default function SearchForm() {
           }
 
           .loading-spinner {
-            font-size: 12px;
+            font-size: 14px;
           }
 
           .error-message {
-            font-size: 12px;
+            font-size: 14px;
+            padding: 8px;
           }
 
           .ad-placeholder {
@@ -572,14 +543,6 @@ export default function SearchForm() {
           .modal-button {
             padding: 8px 15px;
             font-size: 14px;
-          }
-
-          .modal-url {
-            font-size: 12px;
-          }
-
-          .modal-copied {
-            font-size: 12px;
           }
 
           .download-text {
@@ -629,7 +592,6 @@ export default function SearchForm() {
         <>
           <div className="results-container">{grokResult}</div>
           <div className="ad-container">
-            {/* Carbon Ads Placeholder (replace with actual script once integrated) */}
             <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
           </div>
         </>
@@ -712,31 +674,6 @@ export default function SearchForm() {
             </a>
             <div className="modal-buttons" style={{ marginTop: "10px" }}>
               <button onClick={closeExtensionModal} className="modal-button">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCopyModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-title">Open in Safari</div>
-            <p className="modal-text">
-              To search with Grok in Safari, copy the URL below and paste it into Safari’s address bar.
-            </p>
-            <p className="modal-url">
-              <a href={grokUrl} target="_blank" rel="noopener noreferrer">
-                {grokUrl}
-              </a>
-            </p>
-            {isCopied && <p className="modal-copied">Copied to clipboard!</p>}
-            <div className="modal-buttons">
-              <button onClick={() => copyToClipboard(grokUrl)} className="modal-button">
-                Copy URL
-              </button>
-              <button onClick={closeCopyModal} className="modal-button">
                 Close
               </button>
             </div>

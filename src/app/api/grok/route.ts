@@ -5,8 +5,11 @@ export async function POST(request: NextRequest) {
     const { query } = await request.json();
 
     if (!query || typeof query !== "string") {
+      console.log("Invalid query received:", query);
       return NextResponse.json({ error: "Invalid query" }, { status: 400 });
     }
+
+    console.log("Sending request to Grok API with query:", query);
 
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
@@ -31,16 +34,21 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log("Grok API response status:", response.status);
+
     if (!response.ok) {
+      const errorData = await response.json();
+      console.log("Grok API error response:", errorData);
       return NextResponse.json(
-        { error: "Failed to fetch response from Grok API" },
+        { error: errorData.error || "Failed to fetch response from Grok API" },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-    const result = data.choices[0]?.message?.content || "No response received.";
+    console.log("Grok API successful response:", data);
 
+    const result = data.choices[0]?.message?.content || "No response received.";
     return NextResponse.json({ result });
   } catch (error) {
     console.error("Error in /api/grok:", error);
