@@ -302,12 +302,35 @@ export default function SearchForm() {
           color: #333;
         }
 
-        .loading-spinner {
+        .loading-bar-container {
           margin-top: 20px;
-          font-size: 16px;
-          font-weight: bold;
-          color: #666;
-          text-align: center;
+          width: 200px;
+          height: 8px;
+          background: #eee;
+          border-radius: 4px;
+          overflow: hidden;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .loading-bar {
+          width: 30%;
+          height: 100%;
+          background: #e7cf2c;
+          border-radius: 4px;
+          animation: cylon 1.5s infinite ease-in-out;
+        }
+
+        @keyframes cylon {
+          0% {
+            transform: translateX(0);
+          }
+          50% {
+            transform: translateX(233.33%); /* (100% container width - 30% bar width) / 30% bar width * 100 */
+          }
+          100% {
+            transform: translateX(0);
+          }
         }
 
         .error-message {
@@ -493,8 +516,9 @@ export default function SearchForm() {
             max-height: 200px;
           }
 
-          .loading-spinner {
-            font-size: 14px;
+          .loading-bar-container {
+            width: 150px;
+            height: 6px;
           }
 
           .error-message {
@@ -578,7 +602,11 @@ export default function SearchForm() {
         )}
       </div>
 
-      {isLoading && <div className="loading-spinner">Loading...</div>}
+      {isLoading && (
+        <div className="loading-bar-container">
+          <div className="loading-bar"></div>
+        </div>
+      )}
       {error && <div className="error-message">{error}</div>}
       {grokResult && (
         <>
