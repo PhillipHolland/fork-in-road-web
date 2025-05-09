@@ -12,6 +12,8 @@ export default function SearchForm() {
   const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
   const [grokUrl, setGrokUrl] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]); // State for autocomplete suggestions
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false); // Control suggestion dropdown visibility
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -57,6 +59,39 @@ export default function SearchForm() {
     }
   }, []);
 
+  // Fetch autocomplete suggestions from Wikipedia's API
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const debounceFetch = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`
+        );
+        const data = await response.json();
+        const suggestionList = data[1] || []; // data[1] contains the suggestions
+        setSuggestions(suggestionList);
+        setShowSuggestions(suggestionList.length > 0);
+      } catch (error) {
+        console.error("Error fetching autocomplete suggestions:", error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // Debounce to avoid excessive API calls
+
+    return () => clearTimeout(debounceFetch);
+  }, [query]);
+
+  // Handle suggestion selection
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+  };
+
   // Ensure defaultEngine is never null
   if (!defaultEngine) {
     console.log("Falling back to default engine: google");
@@ -89,6 +124,7 @@ export default function SearchForm() {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && query) {
       setShowModal(true);
+      setShowSuggestions(false); // Hide suggestions on Enter
     }
   };
 
@@ -216,6 +252,36 @@ export default function SearchForm() {
           width: 20px;
           height: 20px;
           color: #666;
+        }
+
+        .suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #ccc;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(32, 33, 36, 0.28);
+          z-index: 1000;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .suggestion-item {
+          padding: 10px;
+          font-size: 14px;
+          color: #333;
+          cursor: pointer;
+          border-bottom: 1px solid #eee;
+        }
+
+        .suggestion-item:last-child {
+          border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+          background: #f0f0f0;
         }
 
         .search-label {
@@ -377,6 +443,11 @@ export default function SearchForm() {
             right: 8px; /* Adjust to fit within the search bar */
           }
 
+          .suggestion-item {
+            padding: 8px;
+            font-size: 12px;
+          }
+
           .search-label {
             font-size: 12px;
             margin-bottom: 15px;
@@ -436,11 +507,24 @@ export default function SearchForm() {
           onKeyPress={handleKeyPress}
           className="search-input"
           placeholder="search"
-          autoComplete="on"
+          autoComplete="off" // Disable browser autocomplete to avoid conflicts
           autoCorrect="on"
           autoCapitalize="on"
         />
         <span className="search-icon">🔍</span>
+        {showSuggestions && (
+          <div className="suggestions">
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                className="suggestion-item"
+                onClick={() => handleSuggestionClick(suggestion)}
+              >
+                {suggestion}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="search-label">search with...</div>
