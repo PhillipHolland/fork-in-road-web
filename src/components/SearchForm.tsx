@@ -30,8 +30,10 @@ export default function SearchForm() {
   const [braveResults, setBraveResults] = useState<BraveSearchResult[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalResults, setTotalResults] = useState<number>(0);
+  const [totalFetchedResults, setTotalFetchedResults] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const resultsPerPage = 10; // Increased to 10 to fetch more results per page
+  const resultsPerPage = 20;
+  const maxTotalResults = 200;
   const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
@@ -49,6 +51,9 @@ export default function SearchForm() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounce Intersection Observer to prevent rapid fetches
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -185,7 +190,7 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchResults = async (q: string, page: number = 1, append: boolean = false) => {
+  const fetchResults = async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
     if (page === 1) {
       setIsLoading(true);
     } else {
@@ -197,6 +202,7 @@ export default function SearchForm() {
       if (!append) {
         setGrokResult("");
         setBraveResults([]);
+        setTotalFetchedResults(0);
       }
 
       let finalQuery = q;
@@ -231,7 +237,7 @@ export default function SearchForm() {
       // Fetch Brave Search results
       const offset = (page - 1) * resultsPerPage;
       const braveResponse = await fetch(
-        `/api/brave-search?query=${encodeURIComponent(q)}&count=${resultsPerPage}&offset=${offset}`
+        `/api/brave-search?query=${encodeURIComponent(q)}&count=${retryCount}&offset=${offset}`
       );
 
       console.log("Brave API Response Status:", braveResponse.status);
@@ -251,21 +257,31 @@ export default function SearchForm() {
       );
       setTotalResults(braveData.total || 0);
 
-      // Calculate total fetched results
-      const totalFetched = page * resultsPerPage;
+      // Update total fetched results
+      setTotalFetchedResults((prev) => prev + newResults.length);
 
       // Log debugging info
       console.log("Fetch Results Debug:", {
         query: q,
         page,
+        count: retryCount,
+        offset,
         resultsLength: newResults.length,
         total: braveData.total,
-        totalFetched,
-        hasMore: newResults.length > 0 && totalFetched < (braveData.total || 0),
+        totalFetched: totalFetchedResults + newResults.length,
+        hasMore: newResults.length > 0 && (totalFetchedResults + newResults.length) < Math.min(braveData.total || 0, maxTotalResults),
       });
 
-      // Update hasMore based on total results and fetched results
-      setHasMore(newResults.length > 0 && totalFetched < (braveData.total || 0));
+      // Update hasMore based on total fetched results and a maximum cap
+      const hasMoreResults = newResults.length > 0 && (totalFetchedResults + newResults.length) < Math.min(braveData.total || 0, maxTotalResults);
+      setHasMore(hasMoreResults);
+
+      // Retry with a smaller count if no results are returned but more are expected
+      if (newResults.length === 0 && hasMoreResults && retryCount > 1) {
+        const newRetryCount = Math.floor(retryCount / 2);
+        console.log(`Retrying with smaller count: ${newRetryCount}`);
+        await fetchResults(q, page, append, newRetryCount);
+      }
     } catch (err) {
       console.error("Error in fetchResults:", err);
       if (err instanceof Error) {
@@ -296,6 +312,21 @@ export default function SearchForm() {
     }
   };
 
+  // Debounced fetch handler for Intersection Observer
+  const debouncedFetch = useCallback(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      setCurrentPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        console.log("Fetching page:", nextPage);
+        fetchResults(query, nextPage, true);
+        return nextPage;
+      });
+    }, 300); // Debounce for 300ms to prevent rapid fetches
+  }, [query]);
+
   // Set up Intersection Observer for infinite scroll
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -306,15 +337,10 @@ export default function SearchForm() {
         isLoadingMore,
       });
       if (target.isIntersecting && hasMore && !isLoadingMore) {
-        setCurrentPage((prevPage) => {
-          const nextPage = prevPage + 1;
-          console.log("Fetching page:", nextPage);
-          fetchResults(query, nextPage, true);
-          return nextPage;
-        });
+        debouncedFetch();
       }
     },
-    [hasMore, isLoadingMore, query]
+    [hasMore, isLoadingMore, debouncedFetch]
   );
 
   useEffect(() => {
@@ -326,9 +352,9 @@ export default function SearchForm() {
     }
 
     observerRef.current = new IntersectionObserver(handleObserver, {
-      root: containerRef.current, // Use the container as the root
-      rootMargin: "0px", // Trigger when the loadMoreRef is 0px from the bottom
-      threshold: 0.1, // Trigger when 10% of the loadMoreRef is visible
+      root: containerRef.current,
+      rootMargin: "0px",
+      threshold: 0.1,
     });
 
     if (loadMoreRef.current) {
@@ -338,6 +364,9 @@ export default function SearchForm() {
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
+      }
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
     };
   }, [handleObserver]);
@@ -398,6 +427,7 @@ export default function SearchForm() {
     setHighlightedIndex(-1);
     setCurrentPage(1);
     setTotalResults(0);
+    setTotalFetchedResults(0);
     setHasMore(true);
     setRefineInput("");
   };
@@ -414,6 +444,7 @@ export default function SearchForm() {
     setHighlightedIndex(-1);
     setCurrentPage(1);
     setTotalResults(0);
+    setTotalFetchedResults(0);
     setHasMore(true);
   };
 
@@ -563,12 +594,14 @@ export default function SearchForm() {
           background: #fff;
           border-radius: 10px;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          max-height: 300px;
+          max-height: 400px; /* Increased from 300px */
           overflow-y: auto;
           text-align: left;
           font-size: 14px;
           color: #333;
           line-height: 1.6;
+          will-change: transform; /* Optimize scrolling */
+          -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
         .results-header {
@@ -590,6 +623,7 @@ export default function SearchForm() {
           color: #000;
           margin-top: 20px;
           margin-bottom: 10px;
+          text-align: left; /* Explicitly left-justify */
         }
 
         .url-results-container {
@@ -601,12 +635,15 @@ export default function SearchForm() {
           font-size: 14px;
           color: #333;
           line-height: 1.6;
-          max-height: 400px;
+          max-height: 600px; /* Increased from 400px */
           overflow-y: auto;
+          will-change: transform; /* Optimize scrolling */
+          -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
         .url-result-item {
           margin-bottom: 15px;
+          contain: content; /* Improve rendering performance */
         }
 
         .url-result-item:last-child {
@@ -618,6 +655,7 @@ export default function SearchForm() {
           font-weight: bold;
           color: #007bff;
           text-decoration: none;
+          display: block; /* Simplify layout */
         }
 
         .url-result-title:hover {
@@ -629,11 +667,13 @@ export default function SearchForm() {
           color: #666;
           margin-bottom: 5px;
           word-break: break-all;
+          display: block; /* Simplify layout */
         }
 
         .url-result-description {
           font-size: 14px;
           color: #333;
+          display: block; /* Simplify layout */
         }
 
         .loading-more {
@@ -1080,7 +1120,15 @@ export default function SearchForm() {
           .results-container {
             padding: 10px;
             font-size: 12px;
-            max-height: 200px;
+            max-height: 300px; /* Increased from 200px */
+          }
+
+          .results-header {
+            flex-direction: row; /* Keep inline on mobile */
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap; /* Allow wrapping if needed */
           }
 
           .results-header-text {
@@ -1095,7 +1143,7 @@ export default function SearchForm() {
           .url-results-container {
             padding: 10px;
             font-size: 12px;
-            max-height: 300px;
+            max-height: 500px; /* Increased from 300px */
           }
 
           .url-result-item {
@@ -1120,12 +1168,6 @@ export default function SearchForm() {
             font-size: 12px;
           }
 
-          .results-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-
           .view-toggle {
             font-size: 12px;
           }
@@ -1134,7 +1176,6 @@ export default function SearchForm() {
             gap: 6px;
             flex-wrap: wrap;
             justify-content: flex-end;
-            width: 100%;
           }
 
           .action-button {
