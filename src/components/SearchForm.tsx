@@ -21,19 +21,19 @@ export default function SearchForm() {
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
-  const [showRefineModal, setShowRefineModal] = useState<boolean>(false); // New state for refine modal
+  const [showRefineModal, setShowRefineModal] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [grokResult, setGrokResult] = useState<string>("");
-  const [originalQuery, setOriginalQuery] = useState<string>(""); // Store original query for refinement
+  const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [isCopied, setIsCopied] = useState<boolean>(false); // State for copy confirmation
-  const [shareMessage, setShareMessage] = useState<string>(""); // State for share fallback message
-  const [refineInput, setRefineInput] = useState<string>(""); // State for refine input
-  const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered"); // State for toggle view
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]); // State for recent searches
-  const [feedbackMessage, setFeedbackMessage] = useState<string>(""); // State for feedback message
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [shareMessage, setShareMessage] = useState<string>("");
+  const [refineInput, setRefineInput] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered");
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [feedbackMessage, setFeedbackMessage] = useState<string>("");
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -731,13 +731,27 @@ export default function SearchForm() {
           background: #f0f0f0;
         }
 
+        .refine-modal-input-container {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
+
         .refine-modal-input {
           width: 100%;
-          padding: 8px;
+          max-width: 90%; /* Slightly narrower to match search-container */
+          padding: 10px;
           border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 14px;
-          margin-bottom: 10px;
+          border-radius: 20px;
+          font-size: 16px;
+          box-sizing: border-box;
+          background: #fff;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          transition: box-shadow 0.3s ease;
+        }
+
+        .refine-modal-input:hover {
+          box-shadow: 0 2px 8px rgba(32, 33, 36, 0.4);
         }
 
         .search-label {
@@ -993,10 +1007,14 @@ export default function SearchForm() {
             margin-bottom: 4px;
           }
 
-          .refine-modal-input {
-            padding: 6px;
-            font-size: 12px;
+          .refine-modal-input-container {
             margin-bottom: 8px;
+          }
+
+          .refine-modal-input {
+            padding: 8px;
+            font-size: 14px;
+            max-width: 100%; /* Adjust for smaller modal */
           }
 
           .loading-bar-container {
@@ -1246,13 +1264,15 @@ export default function SearchForm() {
         <div className="modal">
           <div className="modal-content">
             <div className="modal-title">Refine Your Result</div>
-            <input
-              type="text"
-              className="refine-modal-input"
-              value={refineInput}
-              onChange={(e) => setRefineInput(e.target.value)}
-              placeholder="Enter refinement instruction (e.g., 'Make it shorter')"
-            />
+            <div className="refine-modal-input-container">
+              <input
+                type="text"
+                className="refine-modal-input"
+                value={refineInput}
+                onChange={(e) => setRefineInput(e.target.value)}
+                placeholder="Enter refinement instruction (e.g., 'Make it shorter')"
+              />
+            </div>
             <div className="modal-buttons">
               <button onClick={handleRefineSubmit} className="modal-button">
                 Submit
