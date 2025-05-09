@@ -34,7 +34,7 @@ export default function SearchForm() {
   const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
-  const [isAutocompleteSelection, setIsAutocompleteSelection] = useState<boolean>(false); // New state
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null); // New state
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -65,12 +65,9 @@ export default function SearchForm() {
 
   // Fetch autocomplete suggestions from Wikipedia's API
   useEffect(() => {
-    if (!query || query.length < 2 || isAutocompleteSelection) {
-      if (!isAutocompleteSelection) {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-      setIsAutocompleteSelection(false); // Reset the flag after skipping
+    if (!query || query.length < 2 || query === selectedSuggestion) {
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -91,7 +88,7 @@ export default function SearchForm() {
     }, 300);
 
     return () => clearTimeout(debounceFetch);
-  }, [query, isAutocompleteSelection]);
+  }, [query, selectedSuggestion]);
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -142,7 +139,15 @@ export default function SearchForm() {
     setQuery(suggestion);
     setSuggestions([]);
     setShowSuggestions(false);
-    setIsAutocompleteSelection(true); // Set flag to skip fetch
+    setSelectedSuggestion(suggestion); // Track the selected suggestion
+  };
+
+  // Clear selected suggestion when the user types manually
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+    if (selectedSuggestion && e.target.value !== selectedSuggestion) {
+      setSelectedSuggestion(null); // Clear when user types something different
+    }
   };
 
   // Ensure defaultEngine is never null
@@ -311,6 +316,9 @@ export default function SearchForm() {
     setIsCopied(false);
     setShareMessage("");
     setFeedbackMessage("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedSuggestion(null);
   };
 
   // Handle recent search click
@@ -320,7 +328,7 @@ export default function SearchForm() {
     setQuery(search.query);
     setSuggestions([]);
     setShowSuggestions(false);
-    setIsAutocompleteSelection(true); // Set flag to skip fetch
+    setSelectedSuggestion(search.query); // Treat as a selection to prevent fetch
   };
 
   // Clear recent searches
@@ -1103,7 +1111,7 @@ export default function SearchForm() {
           type="text"
           id="query"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleQueryChange}
           onKeyPress={handleKeyPress}
           className="search-input"
           placeholder="search"
