@@ -62,6 +62,33 @@ export default function SearchForm() {
     }
   }, [grokResult, originalQuery]);
 
+  // Fetch autocomplete suggestions from Wikipedia's API
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const debounceFetch = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`
+        );
+        const data = await response.json();
+        const suggestionList = data[1] || []; // data[1] contains the suggestions
+        setSuggestions(suggestionList);
+        setShowSuggestions(suggestionList.length > 0);
+      } catch (error) {
+        console.error("Error fetching autocomplete suggestions:", error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // Debounce to avoid excessive API calls
+
+    return () => clearTimeout(debounceFetch);
+  }, [query]);
+
   // Prevent zoom on touch for the search input
   useEffect(() => {
     const preventZoom = (e: TouchEvent) => {
@@ -106,37 +133,11 @@ export default function SearchForm() {
     }
   }, []);
 
-  // Fetch autocomplete suggestions from Wikipedia's API
-  useEffect(() => {
-    if (!query || query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const debounceFetch = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`
-        );
-        const data = await response.json();
-        const suggestionList = data[1] || []; // data[1] contains the suggestions
-        setSuggestions(suggestionList);
-        setShowSuggestions(suggestionList.length > 0);
-      } catch (error) {
-        console.error("Error fetching autocomplete suggestions:", error);
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }, 300); // Debounce to avoid excessive API calls
-
-    return () => clearTimeout(debounceFetch);
-  }, [query]);
-
   // Handle suggestion selection
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);
-    setShowSuggestions(false);
+    setSuggestions([]); // Clear suggestions
+    setShowSuggestions(false); // Hide suggestions until new typing
   };
 
   // Ensure defaultEngine is never null
@@ -312,6 +313,8 @@ export default function SearchForm() {
     setGrokResult(search.result);
     setOriginalQuery(search.query);
     setQuery(search.query);
+    setSuggestions([]); // Clear suggestions
+    setShowSuggestions(false); // Hide suggestions
   };
 
   // Clear recent searches
@@ -437,6 +440,7 @@ export default function SearchForm() {
           color: #333;
           cursor: pointer;
           border-bottom: 1px solid #eee;
+          transition: background 0.2s, color 0.2s;
         }
 
         .suggestion-item:last-child {
@@ -444,7 +448,8 @@ export default function SearchForm() {
         }
 
         .suggestion-item:hover {
-          background: #f0f0f0;
+          background: #e7cf2c;
+          color: #000;
         }
 
         .results-container {
@@ -505,11 +510,17 @@ export default function SearchForm() {
           font-size: 12px;
           color: #333;
           cursor: pointer;
-          transition: background 0.2s;
+          transition: background 0.2s, transform 0.1s;
         }
 
         .action-button:hover {
-          background: #e0e0e0;
+          background: #e7cf2c;
+          color: #000;
+        }
+
+        .action-button:active {
+          transform: scale(0.95); /* Subtle scale-down effect on click */
+          background: #d4bc25; /* Slightly darker shade of #e7cf2c on click */
         }
 
         .action-button svg {
@@ -703,14 +714,20 @@ export default function SearchForm() {
         }
 
         .clear-history {
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
           font-size: 12px;
-          color: #007bff;
+          color: #333;
           cursor: pointer;
-          text-decoration: underline;
+          transition: background 0.2s, color 0.2s;
         }
 
         .clear-history:hover {
-          color: #0056b3;
+          background: #ff4d4d;
+          color: #fff;
+          border-color: #ff4d4d;
         }
 
         .recent-search-item {
@@ -739,7 +756,7 @@ export default function SearchForm() {
 
         .refine-modal-input {
           width: 100%;
-          max-width: 90%; /* Slightly narrower to match search-container */
+          max-width: 90%;
           padding: 10px;
           border: 1px solid #ccc;
           border-radius: 20px;
@@ -998,6 +1015,7 @@ export default function SearchForm() {
           }
 
           .clear-history {
+            padding: 3px 6px;
             font-size: 10px;
           }
 
@@ -1270,7 +1288,7 @@ export default function SearchForm() {
                 className="refine-modal-input"
                 value={refineInput}
                 onChange={(e) => setRefineInput(e.target.value)}
-                placeholder="Enter refinement instruction (e.g., 'Make it shorter')"
+                placeholder="Enter refinement instruction"
               />
             </div>
             <div className="modal-buttons">
