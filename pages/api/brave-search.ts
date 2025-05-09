@@ -5,26 +5,34 @@ interface BraveSearchResult {
   title: string;
   url: string;
   description: string;
-  [key: string]: unknown; // Allow for additional properties
+  [key: string]: unknown;
 }
 
 // Define the shape of the Brave Search API response
 interface BraveSearchResponse {
   web?: {
     results: BraveSearchResult[];
+    total: number; // Total number of results (for pagination)
   };
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { query } = req.query;
+  const { query, count = "5", offset = "0" } = req.query;
 
   if (!query || typeof query !== "string") {
     return res.status(400).json({ error: "Query parameter is required" });
   }
 
+  const countNum = parseInt(count as string, 10);
+  const offsetNum = parseInt(offset as string, 10);
+
+  if (isNaN(countNum) || isNaN(offsetNum)) {
+    return res.status(400).json({ error: "Count and offset must be valid numbers" });
+  }
+
   try {
     const braveResponse = await fetch(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`,
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${countNum}&offset=${offsetNum}`,
       {
         headers: {
           Accept: "application/json",
@@ -45,7 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       description: result.description,
     }));
 
-    res.status(200).json(formattedResults);
+    res.status(200).json({
+      results: formattedResults,
+      total: braveData.web?.total || 0, // Return total results for pagination
+    });
   } catch (error) {
     console.error("Error fetching Brave Search results:", error);
     res.status(500).json({ error: "Failed to fetch Brave Search results" });

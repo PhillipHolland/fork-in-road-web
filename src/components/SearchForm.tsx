@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { searchEngines, SearchEngine } from "@/lib/searchEngines";
 import Image from "next/image";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -24,13 +23,14 @@ interface BraveSearchResult {
 
 export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
-  const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
-  const [showModal, setShowModal] = useState<boolean>(false);
   const [showRefineModal, setShowRefineModal] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [grokResult, setGrokResult] = useState<string>("");
   const [braveResults, setBraveResults] = useState<BraveSearchResult[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1); // Track current page for pagination
+  const [totalResults, setTotalResults] = useState<number>(0); // Track total number of results
+  const resultsPerPage = 5; // Number of results per page
   const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -124,28 +124,6 @@ export default function SearchForm() {
     };
   }, []);
 
-  // Detect browser and preselect a likely default engine
-  useEffect(() => {
-    const storedEngine = localStorage.getItem("defaultSearchEngine") as SearchEngine;
-    if (storedEngine && storedEngine in searchEngines) {
-      console.log("Using stored default engine:", storedEngine);
-      setDefaultEngine(storedEngine);
-    } else {
-      const userAgent = navigator.userAgent.toLowerCase();
-      let preselectedEngine: SearchEngine = "google";
-      if (userAgent.includes("edg")) {
-        preselectedEngine = "bing";
-      } else if (userAgent.includes("firefox")) {
-        preselectedEngine = "google";
-      } else if (userAgent.includes("safari") && !userAgent.includes("chrome")) {
-        preselectedEngine = "google";
-      }
-      console.log("Preselected default engine:", preselectedEngine);
-      setDefaultEngine(preselectedEngine);
-      localStorage.setItem("defaultSearchEngine", preselectedEngine);
-    }
-  }, []);
-
   // Handle suggestion selection
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);
@@ -165,11 +143,16 @@ export default function SearchForm() {
 
   // Handle keyboard navigation and selection
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || suggestions.length === 0) {
-      if (e.key === "Enter" && query) {
-        setShowModal(true);
-        setShowSuggestions(false);
+    if (e.key === "Enter" && query) {
+      e.preventDefault();
+      if (showSuggestions && highlightedIndex >= 0) {
+        handleSuggestionClick(suggestions[highlightedIndex]);
       }
+      handleSearch(query);
+      return;
+    }
+
+    if (!showSuggestions || suggestions.length === 0) {
       return;
     }
 
@@ -181,35 +164,12 @@ export default function SearchForm() {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : 0));
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      e.preventDefault();
-      handleSuggestionClick(suggestions[highlightedIndex]);
-    } else if (e.key === "Enter" && query) {
-      setShowModal(true);
-      setShowSuggestions(false);
     }
   };
-
-  // Ensure defaultEngine is never null
-  if (!defaultEngine) {
-    console.log("Falling back to default engine: google");
-    setDefaultEngine("google");
-  }
 
   // Utility to detect mobile devices
   const isMobileDevice = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
-
-  const getDefaultEngineUrl = (q: string, engine: SearchEngine) => {
-    const searchEngine = searchEngines[engine];
-    const url = new URL(searchEngine.baseUrl);
-    url.searchParams.set(searchEngine.queryParam, q);
-    return url.toString();
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
   };
 
   const closeRefineModal = () => {
@@ -218,7 +178,7 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchGrokResult = async (q: string, refinement?: string) => {
+  const fetchGrokResult = async (q: string, refinement?: string, page: number = 1) => {
     setIsLoading(true);
     setError("");
     setGrokResult("");
@@ -253,8 +213,11 @@ export default function SearchForm() {
         setOriginalQuery(q);
       }
 
-      // Fetch Brave Search results via server-side API route
-      const braveResponse = await fetch(`/api/brave-search?query=${encodeURIComponent(q)}`);
+      // Fetch Brave Search results via server-side API route with pagination
+      const offset = (page - 1) * resultsPerPage;
+      const braveResponse = await fetch(
+        `/api/brave-search?query=${encodeURIComponent(q)}&count=${resultsPerPage}&offset=${offset}`
+      );
 
       console.log("Brave API Response Status:", braveResponse.status);
 
@@ -266,7 +229,8 @@ export default function SearchForm() {
         throw new Error(braveData.error || "Failed to fetch Brave Search results");
       }
 
-      setBraveResults(braveData);
+      setBraveResults(braveData.results || []);
+      setTotalResults(braveData.total || 0); // Update total results for pagination
     } catch (err) {
       console.error("Error in fetchGrokResult:", err);
       if (err instanceof Error) {
@@ -279,15 +243,16 @@ export default function SearchForm() {
     }
   };
 
-  // Handle Grok search by fetching and displaying results locally
-  const handleGrokSearch = (q: string) => {
-    fetchGrokResult(q);
+  // Handle search (used by both button click and Enter key)
+  const handleSearch = (q: string, page: number = 1) => {
+    setCurrentPage(page);
+    fetchGrokResult(q, undefined, page);
   };
 
-  // Combined handler for "With Grok" button in modal
-  const handleGrokModalClick = () => {
-    handleGrokSearch(query);
-    closeModal();
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > Math.ceil(totalResults / resultsPerPage)) return;
+    handleSearch(query, newPage);
   };
 
   // Handle copy button click
@@ -351,6 +316,8 @@ export default function SearchForm() {
     setShowSuggestions(false);
     setSelectedSuggestion(null);
     setHighlightedIndex(-1);
+    setCurrentPage(1);
+    setTotalResults(0);
   };
 
   // Handle recent search click
@@ -363,6 +330,8 @@ export default function SearchForm() {
     setShowSuggestions(false);
     setSelectedSuggestion(search.query);
     setHighlightedIndex(-1);
+    setCurrentPage(1);
+    setTotalResults(0);
   };
 
   // Clear recent searches
@@ -519,6 +488,13 @@ export default function SearchForm() {
           line-height: 1.6;
         }
 
+        .results-header-text {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #000;
+        }
+
         .url-results-container {
           margin-top: 20px;
           padding: 15px;
@@ -567,6 +543,36 @@ export default function SearchForm() {
         .url-result-description {
           font-size: 14px;
           color: #333;
+        }
+
+        .pagination-container {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 15px;
+        }
+
+        .pagination-button {
+          padding: 8px 16px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 20px;
+          font-size: 14px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.3s, box-shadow 0.3s ease;
+        }
+
+        .pagination-button:hover {
+          background: #e7cf2c;
+          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .pagination-button:disabled {
+          background: #ccc;
+          color: #666;
+          cursor: not-allowed;
+          box-shadow: none;
         }
 
         .results-header {
@@ -872,16 +878,9 @@ export default function SearchForm() {
           box-shadow: 0 2px 8px rgba(32, 33, 36, 0.4);
         }
 
-        .search-label {
-          font-size: 14px;
-          color: #666;
-          margin-bottom: 20px;
-        }
-
         .search-buttons {
           display: flex;
           justify-content: center;
-          gap: 10px;
           margin-bottom: 20px;
         }
 
@@ -1023,6 +1022,11 @@ export default function SearchForm() {
             max-height: 200px;
           }
 
+          .results-header-text {
+            font-size: 14px;
+            margin-bottom: 8px;
+          }
+
           .url-results-container {
             padding: 10px;
             font-size: 12px;
@@ -1047,6 +1051,16 @@ export default function SearchForm() {
           }
 
           .url-result-description {
+            font-size: 12px;
+          }
+
+          .pagination-container {
+            gap: 8px;
+            margin-top: 10px;
+          }
+
+          .pagination-button {
+            padding: 6px 12px;
             font-size: 12px;
           }
 
@@ -1172,8 +1186,7 @@ export default function SearchForm() {
             padding: 8px;
           }
 
-          .search-label {
-            font-size: 12px;
+          .search-buttons {
             margin-bottom: 15px;
           }
 
@@ -1258,6 +1271,16 @@ export default function SearchForm() {
         </div>
       )}
 
+      <div className="search-buttons">
+        <button
+          onClick={() => handleSearch(query)}
+          className={`search-button ${!query ? "button-disabled" : ""}`}
+          disabled={!query}
+        >
+          Fork It
+        </button>
+      </div>
+
       {isLoading && (
         <div className="loading-bar-container">
           <div className="loading-bar"></div>
@@ -1267,22 +1290,7 @@ export default function SearchForm() {
       {grokResult && (
         <>
           <div className="results-header">
-            <div className="view-toggle">
-              View as:
-              <span
-                className={viewMode === "rendered" ? "active" : ""}
-                onClick={() => setViewMode("rendered")}
-              >
-                Rendered
-              </span>
-              |
-              <span
-                className={viewMode === "raw" ? "active" : ""}
-                onClick={() => setViewMode("raw")}
-              >
-                Raw
-              </span>
-            </div>
+            <div className="results-header-text">Grok Results</div>
             <div className="action-buttons">
               <div className="action-button" onClick={handleCopy}>
                 <svg
@@ -1387,6 +1395,22 @@ export default function SearchForm() {
                   <div className="url-result-description">{result.description}</div>
                 </div>
               ))}
+              <div className="pagination-container">
+                <button
+                  className="pagination-button"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  className="pagination-button"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= Math.ceil(totalResults / resultsPerPage)}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
           <div className="feedback-section">
@@ -1434,60 +1458,6 @@ export default function SearchForm() {
               <button onClick={closeRefineModal} className="modal-button">
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="search-label">search with...</div>
-
-      <div className="search-buttons">
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            if (query) {
-              handleGrokSearch(query);
-            }
-          }}
-          className={`search-button ${!query ? "button-disabled" : ""}`}
-        >
-          Grok
-        </a>
-        <a
-          href={query ? getDefaultEngineUrl(query, defaultEngine ?? "google") : "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`search-button ${!query ? "button-disabled" : ""}`}
-        >
-          Default Engine
-        </a>
-      </div>
-
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-title">How do you want to search?</div>
-            <div className="modal-buttons">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleGrokModalClick();
-                }}
-                className="modal-button"
-              >
-                With Grok
-              </a>
-              <a
-                href={getDefaultEngineUrl(query, defaultEngine ?? "google")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="modal-button"
-                onClick={closeModal}
-              >
-                Default Engine
-              </a>
             </div>
           </div>
         </div>
