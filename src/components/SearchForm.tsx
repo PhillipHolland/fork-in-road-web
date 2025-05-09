@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -28,11 +28,13 @@ export default function SearchForm() {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [grokResult, setGrokResult] = useState<string>("");
   const [braveResults, setBraveResults] = useState<BraveSearchResult[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1); // Track current page for pagination
-  const [totalResults, setTotalResults] = useState<number>(0); // Track total number of results
-  const resultsPerPage = 5; // Number of results per page
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const resultsPerPage = 5;
   const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [shareMessage, setShareMessage] = useState<string>("");
@@ -42,6 +44,10 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+
+  // Ref for the bottom of the url-results-container
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -178,42 +184,50 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchGrokResult = async (q: string, refinement?: string, page: number = 1) => {
-    setIsLoading(true);
+  const fetchResults = async (q: string, page: number = 1, append: boolean = false) => {
+    if (page === 1) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     setError("");
-    setGrokResult("");
-    setBraveResults([]);
 
     try {
+      if (!append) {
+        setGrokResult("");
+        setBraveResults([]);
+      }
+
       let finalQuery = q;
-      if (refinement && originalQuery && grokResult) {
-        finalQuery = `Original query: ${originalQuery}. Original result: ${grokResult}. Refine based on: ${refinement}`;
+      if (refineInput && originalQuery && grokResult) {
+        finalQuery = `Original query: ${originalQuery}. Original result: ${grokResult}. Refine based on: ${refineInput}`;
       }
 
-      const grokResponse = await fetch("/api/grok", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: finalQuery }),
-      });
+      // Fetch Grok results only on the first page
+      if (page === 1) {
+        const grokResponse = await fetch("/api/grok", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: finalQuery }),
+        });
 
-      console.log("Grok API Response Status:", grokResponse.status);
+        console.log("Grok API Response Status:", grokResponse.status);
 
-      const grokData = await grokResponse.json();
+        const grokData = await grokResponse.json();
 
-      console.log("Grok API Response Data:", grokData);
+        console.log("Grok API Response Data:", grokData);
 
-      if (!grokResponse.ok) {
-        throw new Error(grokData.error || "Failed to fetch Grok response");
-      }
+        if (!grokResponse.ok) {
+          throw new Error(grokData.error || "Failed to fetch Grok response");
+        }
 
-      setGrokResult(grokData.result || "No response received from Grok.");
-      if (!refinement) {
+        setGrokResult(grokData.result || "No response received from Grok.");
         setOriginalQuery(q);
       }
 
-      // Fetch Brave Search results via server-side API route with pagination
+      // Fetch Brave Search results
       const offset = (page - 1) * resultsPerPage;
       const braveResponse = await fetch(
         `/api/brave-search?query=${encodeURIComponent(q)}&count=${resultsPerPage}&offset=${offset}`
@@ -229,10 +243,13 @@ export default function SearchForm() {
         throw new Error(braveData.error || "Failed to fetch Brave Search results");
       }
 
-      setBraveResults(braveData.results || []);
-      setTotalResults(braveData.total || 0); // Update total results for pagination
+      setBraveResults((prevResults) =>
+        append ? [...prevResults, ...(braveData.results || [])] : braveData.results || []
+      );
+      setTotalResults(braveData.total || 0);
+      setHasMore(braveData.results.length === resultsPerPage && (page * resultsPerPage) < (braveData.total || 0));
     } catch (err) {
-      console.error("Error in fetchGrokResult:", err);
+      console.error("Error in fetchResults:", err);
       if (err instanceof Error) {
         setError(err.message || "An error occurred while fetching the response.");
       } else {
@@ -240,20 +257,61 @@ export default function SearchForm() {
       }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
   // Handle search (used by both button click and Enter key)
-  const handleSearch = (q: string, page: number = 1) => {
-    setCurrentPage(page);
-    fetchGrokResult(q, undefined, page);
+  const handleSearch = (q: string) => {
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchResults(q, 1);
   };
 
-  // Handle pagination
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > Math.ceil(totalResults / resultsPerPage)) return;
-    handleSearch(query, newPage);
+  // Handle refine submit
+  const handleRefineSubmit = () => {
+    if (refineInput.trim()) {
+      setCurrentPage(1);
+      setHasMore(true);
+      fetchResults(query, 1);
+      closeRefineModal();
+    }
   };
+
+  // Set up Intersection Observer for infinite scroll
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const target = entries[0];
+      if (target.isIntersecting && hasMore && !isLoadingMore) {
+        setCurrentPage((prevPage) => {
+          const nextPage = prevPage + 1;
+          fetchResults(query, nextPage, true);
+          return nextPage;
+        });
+      }
+    },
+    [hasMore, isLoadingMore, query]
+  );
+
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    observerRef.current = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "100px",
+      threshold: 0.1,
+    });
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [handleObserver]);
 
   // Handle copy button click
   const handleCopy = async () => {
@@ -293,14 +351,6 @@ export default function SearchForm() {
     }
   };
 
-  // Handle refine submit
-  const handleRefineSubmit = () => {
-    if (refineInput.trim()) {
-      fetchGrokResult(query, refineInput);
-      closeRefineModal();
-    }
-  };
-
   // Handle clear results
   const handleClearResults = () => {
     setGrokResult("");
@@ -309,6 +359,7 @@ export default function SearchForm() {
     setQuery("");
     setError("");
     setIsLoading(false);
+    setIsLoadingMore(false);
     setIsCopied(false);
     setShareMessage("");
     setFeedbackMessage("");
@@ -318,6 +369,8 @@ export default function SearchForm() {
     setHighlightedIndex(-1);
     setCurrentPage(1);
     setTotalResults(0);
+    setHasMore(true);
+    setRefineInput("");
   };
 
   // Handle recent search click
@@ -332,6 +385,7 @@ export default function SearchForm() {
     setHighlightedIndex(-1);
     setCurrentPage(1);
     setTotalResults(0);
+    setHasMore(true);
   };
 
   // Clear recent searches
@@ -505,6 +559,8 @@ export default function SearchForm() {
           font-size: 14px;
           color: #333;
           line-height: 1.6;
+          max-height: 400px;
+          overflow-y: auto;
         }
 
         .url-results-header {
@@ -545,34 +601,11 @@ export default function SearchForm() {
           color: #333;
         }
 
-        .pagination-container {
-          display: flex;
-          justify-content: center;
-          gap: 10px;
-          margin-top: 15px;
-        }
-
-        .pagination-button {
-          padding: 8px 16px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 20px;
+        .loading-more {
+          text-align: center;
+          padding: 10px;
           font-size: 14px;
-          color: #333;
-          cursor: pointer;
-          transition: background 0.3s, box-shadow 0.3s ease;
-        }
-
-        .pagination-button:hover {
-          background: #e7cf2c;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
-        }
-
-        .pagination-button:disabled {
-          background: #ccc;
           color: #666;
-          cursor: not-allowed;
-          box-shadow: none;
         }
 
         .results-header {
@@ -1030,6 +1063,7 @@ export default function SearchForm() {
           .url-results-container {
             padding: 10px;
             font-size: 12px;
+            max-height: 300px;
           }
 
           .url-results-header {
@@ -1054,13 +1088,8 @@ export default function SearchForm() {
             font-size: 12px;
           }
 
-          .pagination-container {
-            gap: 8px;
-            margin-top: 10px;
-          }
-
-          .pagination-button {
-            padding: 6px 12px;
+          .loading-more {
+            padding: 8px;
             font-size: 12px;
           }
 
@@ -1382,7 +1411,7 @@ export default function SearchForm() {
             <div className="url-results-container">
               <div className="url-results-header">Web Results</div>
               {braveResults.map((result, index) => (
-                <div key={index} className="url-result-item">
+                <div key={`${result.url}-${index}`} className="url-result-item">
                   <a
                     href={result.url}
                     target="_blank"
@@ -1395,22 +1424,11 @@ export default function SearchForm() {
                   <div className="url-result-description">{result.description}</div>
                 </div>
               ))}
-              <div className="pagination-container">
-                <button
-                  className="pagination-button"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <button
-                  className="pagination-button"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= Math.ceil(totalResults / resultsPerPage)}
-                >
-                  Next
-                </button>
-              </div>
+              {hasMore && (
+                <div className="loading-more" ref={loadMoreRef}>
+                  {isLoadingMore ? "Loading more..." : ""}
+                </div>
+              )}
             </div>
           )}
           <div className="feedback-section">

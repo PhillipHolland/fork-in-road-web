@@ -10,9 +10,11 @@ interface BraveSearchResult {
 
 // Define the shape of the Brave Search API response
 interface BraveSearchResponse {
+  query?: {
+    estimated_results: number;
+  };
   web?: {
     results: BraveSearchResult[];
-    total: number; // Total number of results (for pagination)
   };
 }
 
@@ -55,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({
       results: formattedResults,
-      total: braveData.web?.total || 0, // Return total results for pagination
+      total: braveData.query?.estimated_results || 0, // Use estimated_results
     });
   } catch (error) {
     console.error("Error fetching Brave Search results:", error);
