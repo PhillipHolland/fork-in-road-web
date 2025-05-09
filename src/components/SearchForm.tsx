@@ -20,7 +20,6 @@ export default function SearchForm() {
   const [query, setQuery] = useState<string>("");
   const [defaultEngine, setDefaultEngine] = useState<SearchEngine | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
   const [showRefineModal, setShowRefineModal] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -34,7 +33,8 @@ export default function SearchForm() {
   const [viewMode, setViewMode] = useState<"rendered" | "raw">("rendered");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
-  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null); // New state
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -68,6 +68,7 @@ export default function SearchForm() {
     if (!query || query.length < 2 || query === selectedSuggestion) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setHighlightedIndex(-1); // Reset highlight when suggestions are cleared
       return;
     }
 
@@ -80,10 +81,12 @@ export default function SearchForm() {
         const suggestionList = data[1] || [];
         setSuggestions(suggestionList);
         setShowSuggestions(suggestionList.length > 0);
+        setHighlightedIndex(-1); // Reset highlight when new suggestions are fetched
       } catch (error) {
         console.error("Error fetching autocomplete suggestions:", error);
         setSuggestions([]);
         setShowSuggestions(false);
+        setHighlightedIndex(-1);
       }
     }, 300);
 
@@ -139,7 +142,8 @@ export default function SearchForm() {
     setQuery(suggestion);
     setSuggestions([]);
     setShowSuggestions(false);
-    setSelectedSuggestion(suggestion); // Track the selected suggestion
+    setSelectedSuggestion(suggestion);
+    setHighlightedIndex(-1); // Reset highlight after selection
   };
 
   // Clear selected suggestion when the user types manually
@@ -147,6 +151,33 @@ export default function SearchForm() {
     setQuery(e.target.value);
     if (selectedSuggestion && e.target.value !== selectedSuggestion) {
       setSelectedSuggestion(null); // Clear when user types something different
+    }
+  };
+
+  // Handle keyboard navigation and selection
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === "Enter" && query) {
+        setShowModal(true);
+        setShowSuggestions(false);
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault(); // Prevent cursor movement in the input
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < suggestions.length - 1 ? prevIndex + 1 : prevIndex
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : 0));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[highlightedIndex]);
+    } else if (e.key === "Enter" && query) {
+      setShowModal(true);
+      setShowSuggestions(false);
     }
   };
 
@@ -161,11 +192,6 @@ export default function SearchForm() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  // Utility to detect iOS/iPadOS devices
-  const isIOSDevice = () => {
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  };
-
   const getDefaultEngineUrl = (q: string, engine: SearchEngine) => {
     const searchEngine = searchEngines[engine];
     const url = new URL(searchEngine.baseUrl);
@@ -173,21 +199,8 @@ export default function SearchForm() {
     return url.toString();
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && query) {
-      setShowModal(true);
-      setShowSuggestions(false); // Hide suggestions on Enter
-    }
-  };
-
   const closeModal = () => {
     setShowModal(false);
-  };
-
-  const closeExtensionModal = () => {
-    setShowExtensionModal(false);
-    // Proceed to fetch and display Grok results after closing
-    fetchGrokResult(query);
   };
 
   const closeRefineModal = () => {
@@ -243,14 +256,7 @@ export default function SearchForm() {
 
   // Handle Grok search by fetching and displaying results locally
   const handleGrokSearch = (q: string) => {
-    // Check if the user is on iOS/iPadOS and if the extension modal has been shown this session
-    const hasShownExtensionModal = sessionStorage.getItem("hasShownExtensionModal");
-    if (isIOSDevice() && !hasShownExtensionModal) {
-      setShowExtensionModal(true);
-      sessionStorage.setItem("hasShownExtensionModal", "true");
-    } else {
-      fetchGrokResult(q);
-    }
+    fetchGrokResult(q); // Simplified: no iOS check needed
   };
 
   // Combined handler for "With Grok" button in modal
@@ -319,6 +325,7 @@ export default function SearchForm() {
     setSuggestions([]);
     setShowSuggestions(false);
     setSelectedSuggestion(null);
+    setHighlightedIndex(-1);
   };
 
   // Handle recent search click
@@ -328,7 +335,8 @@ export default function SearchForm() {
     setQuery(search.query);
     setSuggestions([]);
     setShowSuggestions(false);
-    setSelectedSuggestion(search.query); // Treat as a selection to prevent fetch
+    setSelectedSuggestion(search.query);
+    setHighlightedIndex(-1);
   };
 
   // Clear recent searches
@@ -463,6 +471,11 @@ export default function SearchForm() {
 
         .suggestion-item:hover {
           background: #e7cf2c;
+          color: #000;
+        }
+
+        .suggestion-item-highlighted {
+          background: #f5e050; /* Lighter shade of yellow for highlight */
           color: #000;
         }
 
@@ -853,12 +866,6 @@ export default function SearchForm() {
           color: #000;
         }
 
-        .modal-text {
-          font-size: 16px;
-          color: #666;
-          margin-bottom: 20px;
-        }
-
         .modal-buttons {
           display: flex;
           justify-content: center;
@@ -1084,11 +1091,6 @@ export default function SearchForm() {
             margin-bottom: 15px;
           }
 
-          .modal-text {
-            font-size: 14px;
-            margin-bottom: 15px;
-          }
-
           .modal-button {
             padding: 8px 15px;
             font-size: 14px;
@@ -1112,7 +1114,7 @@ export default function SearchForm() {
           id="query"
           value={query}
           onChange={handleQueryChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           className="search-input"
           placeholder="search"
           autoComplete="off"
@@ -1125,7 +1127,7 @@ export default function SearchForm() {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="suggestion-item"
+                className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
                 onClick={() => handleSuggestionClick(suggestion)}
               >
                 {suggestion}
@@ -1366,30 +1368,6 @@ export default function SearchForm() {
               >
                 Default Engine
               </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showExtensionModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-title">iOS Safari Limitations</div>
-            <p className="modal-text">
-              iOS can’t search directly in Safari—let’s fix that! Get our extension to choose your path.
-            </p>
-            <a
-              href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="download-button"
-            >
-              <Image src="/black.svg" alt="Download Fork in Road Extension" width={165} height={36.3} />
-            </a>
-            <div className="modal-buttons" style={{ marginTop: "10px" }}>
-              <button onClick={closeExtensionModal} className="modal-button">
-                Close
-              </button>
             </div>
           </div>
         </div>
