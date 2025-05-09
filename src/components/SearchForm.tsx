@@ -46,6 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [showHistory, setShowHistory] = useState<boolean>(false); // New state for toggling history visibility
 
   // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -319,6 +320,11 @@ export default function SearchForm() {
     }
   };
 
+  // Toggle history visibility
+  const toggleHistory = () => {
+    setShowHistory((prev) => !prev);
+  };
+
   // Debounced fetch handler for Intersection Observer
   const debouncedFetch = useCallback(() => {
     if (debounceTimeoutRef.current) {
@@ -548,12 +554,12 @@ export default function SearchForm() {
         }
 
         .search-input.has-text {
-          border-color: #e7cf2c; /* Match the progress bar color */
+          border-color: #e7cf2c;
         }
 
         .search-icon {
           position: absolute;
-          right: 15px; /* Adjusted from 10px to prevent cutoff */
+          right: 15px;
           top: 50%;
           transform: translateY(-50%);
           width: 20px;
@@ -563,14 +569,14 @@ export default function SearchForm() {
           border: none;
           padding: 0;
           font-size: 20px;
-          cursor: pointer; /* Make clickable */
+          cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .search-icon:hover {
-          color: #e7cf2c; /* Highlight on hover */
+          color: #e7cf2c;
         }
 
         .suggestions {
@@ -979,6 +985,26 @@ export default function SearchForm() {
           background: #f0f0f0;
         }
 
+        .show-history-button {
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+          margin-top: 10px;
+          margin-bottom: 20px;
+          display: inline-block;
+        }
+
+        .show-history-button:hover {
+          background: #e7cf2c;
+          color: #000;
+          border-color: #e7cf2c;
+        }
+
         .refine-modal-input-container {
           display: flex;
           justify-content: center;
@@ -1132,7 +1158,7 @@ export default function SearchForm() {
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 12px; /* Adjusted from 8px to prevent cutoff */
+            right: 12px;
             font-size: 18px;
           }
 
@@ -1282,6 +1308,11 @@ export default function SearchForm() {
             margin-bottom: 4px;
           }
 
+          .show-history-button {
+            padding: 3px 6px;
+            font-size: 10px;
+          }
+
           .refine-modal-input-container {
             margin-bottom: 8px;
           }
@@ -1350,7 +1381,7 @@ export default function SearchForm() {
           value={query}
           onChange={handleQueryChange}
           onKeyDown={handleKeyDown}
-          className={`search-input ${query ? "has-text" : ""}`} // Add has-text class when query is non-empty
+          className={`search-input ${query ? "has-text" : ""}`}
           placeholder="search"
           autoComplete="off"
           autoCorrect="on"
@@ -1359,7 +1390,7 @@ export default function SearchForm() {
         <button
           className="search-icon"
           onClick={handleMagnifyingGlassClick}
-          disabled={!query} // Disable if no query
+          disabled={!query}
           aria-label="Search"
         >
           🔍
@@ -1380,22 +1411,29 @@ export default function SearchForm() {
       </div>
 
       {recentSearches.length > 0 && (
-        <div className="recent-searches">
-          <div className="recent-searches-header">
-            <div className="recent-searches-title">Recent Searches</div>
-            <div className="clear-history" onClick={handleClearHistory}>
-              Clear History
+        <div>
+          <button className="show-history-button" onClick={toggleHistory}>
+            {showHistory ? "Hide History" : "Show History"}
+          </button>
+          {showHistory && (
+            <div className="recent-searches">
+              <div className="recent-searches-header">
+                <div className="recent-searches-title">Recent Searches</div>
+                <div className="clear-history" onClick={handleClearHistory}>
+                  Clear History
+                </div>
+              </div>
+              {recentSearches.map((search, index) => (
+                <div
+                  key={index}
+                  className="recent-search-item"
+                  onClick={() => handleRecentSearchClick(search)}
+                >
+                  {search.query}
+                </div>
+              ))}
             </div>
-          </div>
-          {recentSearches.map((search, index) => (
-            <div
-              key={index}
-              className="recent-search-item"
-              onClick={() => handleRecentSearchClick(search)}
-            >
-              {search.query}
-            </div>
-          ))}
+          )}
         </div>
       )}
 
