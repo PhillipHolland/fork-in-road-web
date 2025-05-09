@@ -185,7 +185,12 @@ export default function SearchForm() {
 
       setGrokResult(data.result);
     } catch (err) {
-      setError(err.message || "An error occurred while fetching the response.");
+      // Use type guard to safely access err.message
+      if (err instanceof Error) {
+        setError(err.message || "An error occurred while fetching the response.");
+      } else {
+        setError("An error occurred while fetching the response.");
+      }
     } finally {
       setIsLoading(false);
     }
