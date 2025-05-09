@@ -31,7 +31,7 @@ export default function SearchForm() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalResults, setTotalResults] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const resultsPerPage = 5;
+  const resultsPerPage = 10; // Increased to 10 to fetch more results per page
   const [originalQuery, setOriginalQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
@@ -244,21 +244,28 @@ export default function SearchForm() {
         throw new Error(braveData.error || "Failed to fetch Brave Search results");
       }
 
+      // Append new results if appending, otherwise reset
+      const newResults = braveData.results || [];
       setBraveResults((prevResults) =>
-        append ? [...prevResults, ...(braveData.results || [])] : braveData.results || []
+        append ? [...prevResults, ...newResults] : newResults
       );
       setTotalResults(braveData.total || 0);
 
+      // Calculate total fetched results
+      const totalFetched = page * resultsPerPage;
+
       // Log debugging info
       console.log("Fetch Results Debug:", {
+        query: q,
         page,
-        resultsLength: braveData.results.length,
+        resultsLength: newResults.length,
         total: braveData.total,
-        currentTotalResults: (page * resultsPerPage),
-        hasMore: braveData.results.length > 0 && (page * resultsPerPage) < (braveData.total || 0),
+        totalFetched,
+        hasMore: newResults.length > 0 && totalFetched < (braveData.total || 0),
       });
 
-      setHasMore(braveData.results.length > 0 && (page * resultsPerPage) < (braveData.total || 0));
+      // Update hasMore based on total results and fetched results
+      setHasMore(newResults.length > 0 && totalFetched < (braveData.total || 0));
     } catch (err) {
       console.error("Error in fetchResults:", err);
       if (err instanceof Error) {
@@ -551,7 +558,7 @@ export default function SearchForm() {
 
         .results-container {
           position: relative;
-          margin-top: 20px;
+          margin-top: 10px;
           padding: 15px;
           background: #fff;
           border-radius: 10px;
@@ -564,15 +571,28 @@ export default function SearchForm() {
           line-height: 1.6;
         }
 
+        .results-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
         .results-header-text {
           font-size: 16px;
           font-weight: bold;
-          margin-bottom: 10px;
           color: #000;
         }
 
-        .url-results-container {
+        .url-results-header {
+          font-size: 16px;
+          font-weight: bold;
+          color: #000;
           margin-top: 20px;
+          margin-bottom: 10px;
+        }
+
+        .url-results-container {
           padding: 15px;
           background: #fff;
           border-radius: 10px;
@@ -583,13 +603,6 @@ export default function SearchForm() {
           line-height: 1.6;
           max-height: 400px;
           overflow-y: auto;
-        }
-
-        .url-results-header {
-          font-size: 16px;
-          font-weight: bold;
-          margin-bottom: 10px;
-          color: #000;
         }
 
         .url-result-item {
@@ -628,13 +641,6 @@ export default function SearchForm() {
           padding: 10px;
           font-size: 14px;
           color: #666;
-        }
-
-        .results-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
         }
 
         .view-toggle {
@@ -1079,6 +1085,10 @@ export default function SearchForm() {
 
           .results-header-text {
             font-size: 14px;
+          }
+
+          .url-results-header {
+            font-size: 14px;
             margin-bottom: 8px;
           }
 
@@ -1086,11 +1096,6 @@ export default function SearchForm() {
             padding: 10px;
             font-size: 12px;
             max-height: 300px;
-          }
-
-          .url-results-header {
-            font-size: 14px;
-            margin-bottom: 8px;
           }
 
           .url-result-item {
@@ -1430,26 +1435,28 @@ export default function SearchForm() {
             )}
           </div>
           {braveResults.length > 0 && (
-            <div className="url-results-container" ref={containerRef}>
+            <>
               <div className="url-results-header">Web Results</div>
-              {braveResults.map((result, index) => (
-                <div key={`${result.url}-${index}`} className="url-result-item">
-                  <a
-                    href={result.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="url-result-title"
-                  >
-                    {result.title}
-                  </a>
-                  <div className="url-result-url">{result.url}</div>
-                  <div className="url-result-description">{result.description}</div>
+              <div className="url-results-container" ref={containerRef}>
+                {braveResults.map((result, index) => (
+                  <div key={`${result.url}-${index}`} className="url-result-item">
+                    <a
+                      href={result.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="url-result-title"
+                    >
+                      {result.title}
+                    </a>
+                    <div className="url-result-url">{result.url}</div>
+                    <div className="url-result-description">{result.description}</div>
+                  </div>
+                ))}
+                <div className="loading-more" ref={loadMoreRef}>
+                  {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
                 </div>
-              ))}
-              <div className="loading-more" ref={loadMoreRef}>
-                {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
               </div>
-            </div>
+            </>
           )}
           <div className="feedback-section">
             <span
