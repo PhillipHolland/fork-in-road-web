@@ -12,8 +12,11 @@ export default function SearchForm() {
   const [showExtensionModal, setShowExtensionModal] = useState<boolean>(false);
   const [grokUrl, setGrokUrl] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]); // State for autocomplete suggestions
-  const [showSuggestions, setShowSuggestions] = useState<boolean>(false); // Control suggestion dropdown visibility
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [grokResult, setGrokResult] = useState<string>(""); // State for Grok API result
+  const [isLoading, setIsLoading] = useState<boolean>(false); // State for loading indicator
+  const [error, setError] = useState<string>(""); // State for error messages
 
   // Prevent zoom on touch for the search input
   useEffect(() => {
@@ -142,8 +145,8 @@ export default function SearchForm() {
 
   const closeExtensionModal = () => {
     setShowExtensionModal(false);
-    // Proceed to the copy-and-paste modal after closing
-    setShowCopyModal(true);
+    // Proceed to fetch and display Grok results after closing
+    fetchGrokResult(query);
   };
 
   // Attempt to copy the URL to the clipboard
@@ -159,6 +162,35 @@ export default function SearchForm() {
     }
   };
 
+  // Fetch Grok 3 API result via the server-side proxy
+  const fetchGrokResult = async (q: string) => {
+    setIsLoading(true);
+    setError("");
+    setGrokResult("");
+
+    try {
+      const response = await fetch("/api/grok", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: q }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch Grok response");
+      }
+
+      setGrokResult(data.result);
+    } catch (err) {
+      setError(err.message || "An error occurred while fetching the response.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle Grok search by showing a modal with the URL to copy
   const handleGrokSearch = (q: string) => {
     const url = getGrokUrl(q);
@@ -170,8 +202,7 @@ export default function SearchForm() {
       setShowExtensionModal(true);
       sessionStorage.setItem("hasShownExtensionModal", "true");
     } else {
-      setShowCopyModal(true);
-      copyToClipboard(url);
+      fetchGrokResult(q); // Fetch and display results locally
     }
   };
 
@@ -282,6 +313,47 @@ export default function SearchForm() {
 
         .suggestion-item:hover {
           background: #f0f0f0;
+        }
+
+        .results-container {
+          margin-top: 20px;
+          padding: 15px;
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          max-height: 300px;
+          overflow-y: auto;
+          text-align: left;
+          font-size: 14px;
+          color: #333;
+        }
+
+        .loading-spinner {
+          margin-top: 20px;
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+        }
+
+        .error-message {
+          margin-top: 20px;
+          font-size: 14px;
+          color: #ff0000;
+          text-align: center;
+        }
+
+        .ad-container {
+          margin-top: 20px;
+          text-align: center;
+        }
+
+        .ad-placeholder {
+          font-size: 12px;
+          color: #666;
+          padding: 10px;
+          border: 1px solid #eee;
+          border-radius: 5px;
+          display: inline-block;
         }
 
         .search-label {
@@ -448,6 +520,25 @@ export default function SearchForm() {
             font-size: 12px;
           }
 
+          .results-container {
+            padding: 10px;
+            font-size: 12px;
+            max-height: 200px;
+          }
+
+          .loading-spinner {
+            font-size: 12px;
+          }
+
+          .error-message {
+            font-size: 12px;
+          }
+
+          .ad-placeholder {
+            font-size: 10px;
+            padding: 8px;
+          }
+
           .search-label {
             font-size: 12px;
             margin-bottom: 15px;
@@ -526,6 +617,18 @@ export default function SearchForm() {
           </div>
         )}
       </div>
+
+      {isLoading && <div className="loading-spinner">Loading...</div>}
+      {error && <div className="error-message">{error}</div>}
+      {grokResult && (
+        <>
+          <div className="results-container">{grokResult}</div>
+          <div className="ad-container">
+            {/* Carbon Ads Placeholder (replace with actual script once integrated) */}
+            <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
+          </div>
+        </>
+      )}
 
       <div className="search-label">search with...</div>
 
