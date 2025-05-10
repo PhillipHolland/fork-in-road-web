@@ -161,8 +161,14 @@ export default function SearchForm() {
       e.preventDefault();
       if (showSuggestions && highlightedIndex >= 0) {
         handleSuggestionClick(suggestions[highlightedIndex]);
+      } else {
+        handleSearch(query);
       }
-      handleSearch(query);
+      // Hide suggestions after Enter is pressed
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setHighlightedIndex(-1);
+      setSelectedSuggestion(query); // Set the current query as selected to prevent suggestions until new text is entered
       return;
     }
 
@@ -308,6 +314,11 @@ export default function SearchForm() {
   const handleMagnifyingGlassClick = () => {
     if (query) {
       handleSearch(query);
+      // Hide suggestions after magnifying glass click
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setHighlightedIndex(-1);
+      setSelectedSuggestion(query); // Prevent suggestions until new text is entered
     }
   };
 
