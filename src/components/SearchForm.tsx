@@ -46,7 +46,8 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Renamed from isSidebarOpen
+  const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -55,6 +56,11 @@ export default function SearchForm() {
 
   // Debounce Intersection Observer to prevent rapid fetches
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ensure the clear icon is only rendered on the client side
+  useEffect(() => {
+    setShowClearIcon(query.length > 0);
+  }, [query]);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -344,9 +350,9 @@ export default function SearchForm() {
     }
   };
 
-  // Toggle sidebar visibility
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
+  // Toggle menu visibility
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
   };
 
   // Debounced fetch handler for Intersection Observer
@@ -483,7 +489,7 @@ export default function SearchForm() {
     setTotalResults(0);
     setTotalFetchedResults(0);
     setHasMore(true);
-    setIsSidebarOpen(false); // Close sidebar after selecting a recent search
+    setIsMenuOpen(false); // Close menu after selecting a recent search
   };
 
   // Clear recent searches
@@ -529,7 +535,7 @@ export default function SearchForm() {
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
           box-sizing: border-box;
-          position: relative; /* For sidebar and history button positioning */
+          position: relative; /* For menu button positioning */
         }
 
         @media (min-width: 850px) {
@@ -539,7 +545,7 @@ export default function SearchForm() {
         }
 
         .header {
-          margin-bottom: 15px;
+          margin-bottom: 20px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -549,12 +555,6 @@ export default function SearchForm() {
           width: 85px;
           height: 85px;
           margin-bottom: 10px;
-        }
-
-        .header h1 {
-          font-size: 16px;
-          font-weight: normal;
-          color: #000;
         }
 
         .search-container {
@@ -731,11 +731,11 @@ export default function SearchForm() {
           color: #000;
         }
 
-        .history-button {
+        .menu-button {
           position: absolute;
           top: 20px;
-          right: 20px;
-          padding: 10px 20px;
+          left: 20px;
+          padding: 8px;
           background: #000;
           color: #fff;
           border: none;
@@ -748,27 +748,27 @@ export default function SearchForm() {
           transition: background 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
-          gap: 6px;
+          justify-content: center;
         }
 
-        .history-button:hover {
+        .menu-button:hover {
           background: #333;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .history-button.button-disabled {
+        .menu-button.button-disabled {
           background: #ccc;
           color: #666;
           cursor: not-allowed;
           box-shadow: none;
         }
 
-        .history-button svg {
-          width: 16px;
-          height: 16px;
+        .menu-button svg {
+          width: 20px;
+          height: 20px;
         }
 
-        .sidebar-overlay {
+        .menu-overlay {
           position: fixed;
           top: 0;
           left: 0;
@@ -776,36 +776,36 @@ export default function SearchForm() {
           height: 100%;
           background: rgba(0, 0, 0, 0.3);
           z-index: 1000;
-          opacity: ${isSidebarOpen ? 1 : 0};
-          visibility: ${isSidebarOpen ? "visible" : "hidden"};
+          opacity: ${isMenuOpen ? 1 : 0};
+          visibility: ${isMenuOpen ? "visible" : "hidden"};
           transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
-        .sidebar {
+        .menu {
           position: fixed;
-          right: 0;
+          left: 0;
           top: 0;
           height: 100%;
           width: 250px;
           background: #f9f9f9;
-          box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
           z-index: 1001;
-          transform: ${isSidebarOpen ? "translateX(0)" : "translateX(100%)"};
+          transform: ${isMenuOpen ? "translateX(0)" : "translateX(-100%)"};
           transition: transform 0.3s ease;
           padding: 20px;
           box-sizing: border-box;
           overflow-y: auto;
         }
 
-        .sidebar-header {
+        .menu-header {
           display: flex;
           justify-content: flex-end;
           align-items: center;
           margin-bottom: 10px;
         }
 
-        .close-sidebar {
-          padding: 8px 16px;
+        .close-menu {
+          padding: 8px;
           background: #000;
           color: #fff;
           border: none;
@@ -818,16 +818,16 @@ export default function SearchForm() {
           transition: background 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
-          gap: 6px;
+          justify-content: center;
         }
 
-        .close-sidebar:hover {
+        .close-menu:hover {
           background: #e7cf2c;
           color: #000;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .close-sidebar svg {
+        .close-menu svg {
           width: 14px;
           height: 14px;
         }
@@ -1323,10 +1323,6 @@ export default function SearchForm() {
             height: 68px;
           }
 
-          .header h1 {
-            font-size: 14px;
-          }
-
           .search-container {
             width: 100%; /* Full width on mobile */
             margin-left: auto;
@@ -1371,29 +1367,27 @@ export default function SearchForm() {
             font-size: 18px;
           }
 
-          .history-button {
-            padding: 8px 15px;
-            font-size: 14px;
+          .menu-button {
             top: 15px;
-            right: 15px;
+            left: 15px;
+            padding: 6px;
           }
 
-          .history-button svg {
-            width: 14px;
-            height: 14px;
+          .menu-button svg {
+            width: 16px;
+            height: 16px;
           }
 
-          .sidebar {
+          .menu {
             width: 80%; /* Larger width on mobile for usability */
             max-width: 200px;
           }
 
-          .close-sidebar {
-            padding: 6px 12px;
-            font-size: 12px;
+          .close-menu {
+            padding: 6px;
           }
 
-          .close-sidebar svg {
+          .close-menu svg {
             width: 12px;
             height: 12px;
           }
@@ -1608,11 +1602,11 @@ export default function SearchForm() {
 
       <div className="container">
         {recentSearches.length > 0 && (
-          <button className="history-button" onClick={toggleSidebar}>
+          <button className="menu-button" onClick={toggleMenu}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1620,17 +1614,15 @@ export default function SearchForm() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M12 2a10 10 0 0 0-7.68 16.61M12 6v6l4 2"></path>
-              <path d="M21 16v5h-5"></path>
-              <path d="M21 21L9 9"></path>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
-            History
           </button>
         )}
 
         <div className="header">
           <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} />
-          <h1>choose</h1>
         </div>
 
         <div className="search-container">
@@ -1643,20 +1635,19 @@ export default function SearchForm() {
                 onChange={handleQueryChange}
                 onKeyDown={handleKeyDown}
                 className={`search-input ${query ? "has-text" : ""}`}
-                placeholder="search"
+                placeholder="search the matrix"
                 autoComplete="off"
                 autoCorrect="on"
                 autoCapitalize="on"
               />
-              {query && (
+              {showClearIcon && (
                 <button
-                  key="clear-icon"
                   type="button"
                   className="clear-icon"
                   onClick={handleClearResults}
                   aria-label="Clear search"
                 >
-                  ×
+                  x
                 </button>
               )}
               <div className="search-icon-container">
@@ -1693,13 +1684,13 @@ export default function SearchForm() {
           </div>
         </div>
 
-        {/* Sidebar for Recent Searches */}
+        {/* Menu for Recent Searches */}
         {recentSearches.length > 0 && (
           <>
-            <div className="sidebar-overlay" onClick={toggleSidebar}></div>
-            <div className="sidebar">
-              <div className="sidebar-header">
-                <button className="close-sidebar" onClick={toggleSidebar}>
+            <div className="menu-overlay" onClick={toggleMenu}></div>
+            <div className="menu">
+              <div className="menu-header">
+                <button className="close-menu" onClick={toggleMenu}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="14"
@@ -1714,7 +1705,6 @@ export default function SearchForm() {
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
-                  Close
                 </button>
               </div>
               <div className="recent-searches">
