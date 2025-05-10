@@ -46,7 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Replaced showHistory with isSidebarOpen
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -546,11 +546,15 @@ export default function SearchForm() {
         }
 
         .search-container {
-          position: relative;
           margin-bottom: 10px;
           display: flex;
           align-items: center;
           gap: 10px;
+        }
+
+        .input-wrapper {
+          position: relative;
+          width: 100%;
         }
 
         .search-input {
@@ -678,6 +682,7 @@ export default function SearchForm() {
           display: flex;
           align-items: center;
           gap: 4px;
+          flex-shrink: 0; /* Prevent button from shrinking */
         }
 
         .history-button:hover {
@@ -1251,6 +1256,10 @@ export default function SearchForm() {
             gap: 8px;
           }
 
+          .input-wrapper {
+            width: 100%;
+          }
+
           .search-input {
             width: 100%;
             padding: 8px 35px 8px 8px;
@@ -1503,26 +1512,46 @@ export default function SearchForm() {
       </div>
 
       <div className="search-container">
-        <input
-          type="text"
-          id="query"
-          value={query}
-          onChange={handleQueryChange}
-          onKeyDown={handleKeyDown}
-          className={`search-input ${query ? "has-text" : ""}`}
-          placeholder="search"
-          autoComplete="off"
-          autoCorrect="on"
-          autoCapitalize="on"
-        />
-        <button
-          className="search-icon"
-          onClick={handleMagnifyingGlassClick}
-          disabled={!query}
-          aria-label="Search"
-        >
-          🔍
-        </button>
+        <div className="input-wrapper">
+          <input
+            type="text"
+            id="query"
+            value={query}
+            onChange={handleQueryChange}
+            onKeyDown={handleKeyDown}
+            className={`search-input ${query ? "has-text" : ""}`}
+            placeholder="search"
+            autoComplete="off"
+            autoCorrect="on"
+            autoCapitalize="on"
+          />
+          <button
+            className="search-icon"
+            onClick={handleMagnifyingGlassClick}
+            disabled={!query}
+            aria-label="Search"
+          >
+            🔍
+          </button>
+          {isLoading && (
+            <div className="loading-bar-container">
+              <div className="loading-bar"></div>
+            </div>
+          )}
+          {showSuggestions && (
+            <div className="suggestions">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         {recentSearches.length > 0 && (
           <button className="history-button" onClick={toggleSidebar}>
             <svg
@@ -1542,24 +1571,6 @@ export default function SearchForm() {
             </svg>
             History
           </button>
-        )}
-        {isLoading && (
-          <div className="loading-bar-container">
-            <div className="loading-bar"></div>
-          </div>
-        )}
-        {showSuggestions && (
-          <div className="suggestions">
-            {suggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion}
-              </div>
-            ))}
-          </div>
         )}
       </div>
 
