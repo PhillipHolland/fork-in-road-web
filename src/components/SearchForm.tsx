@@ -517,7 +517,7 @@ export default function SearchForm() {
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
           box-sizing: border-box;
-          position: relative; /* For sidebar positioning */
+          position: relative; /* For sidebar and history button positioning */
         }
 
         @media (min-width: 850px) {
@@ -671,29 +671,40 @@ export default function SearchForm() {
         }
 
         .history-button {
-          padding: 4px 8px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #333;
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          padding: 10px 20px;
+          background: #000;
+          color: #fff;
+          border: none;
+          border-radius: 20px;
+          font-size: 16px;
+          text-align: center;
+          text-decoration: none;
           cursor: pointer;
-          transition: background 0.2s, color 0.2s;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          transition: background 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
-          gap: 4px;
-          flex-shrink: 0; /* Prevent button from shrinking */
+          gap: 6px;
         }
 
         .history-button:hover {
-          background: #e7cf2c;
-          color: #000;
-          border-color: #e7cf2c;
+          background: #333;
+          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .history-button.button-disabled {
+          background: #ccc;
+          color: #666;
+          cursor: not-allowed;
+          box-shadow: none;
         }
 
         .history-button svg {
-          width: 14px;
-          height: 14px;
+          width: 16px;
+          height: 16px;
         }
 
         .sidebar-overlay {
@@ -727,15 +738,9 @@ export default function SearchForm() {
 
         .sidebar-header {
           display: flex;
-          justify-content: space-between;
+          justify-content: flex-end;
           align-items: center;
           margin-bottom: 15px;
-        }
-
-        .sidebar-title {
-          font-size: 16px;
-          font-weight: bold;
-          color: #333;
         }
 
         .close-sidebar {
@@ -1248,12 +1253,10 @@ export default function SearchForm() {
           }
 
           .search-container {
-            width: 90%;
+            width: 100%; /* Full width on mobile */
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 10px;
-            flex-direction: column;
-            gap: 8px;
           }
 
           .input-wrapper {
@@ -1275,22 +1278,20 @@ export default function SearchForm() {
           }
 
           .history-button {
-            padding: 3px 6px;
-            font-size: 10px;
+            padding: 8px 15px;
+            font-size: 14px;
+            top: 15px;
+            right: 15px;
           }
 
           .history-button svg {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
           }
 
           .sidebar {
             width: 80%; /* Larger width on mobile for usability */
             max-width: 200px;
-          }
-
-          .sidebar-title {
-            font-size: 14px;
           }
 
           .close-sidebar {
@@ -1506,52 +1507,7 @@ export default function SearchForm() {
         }
       `}</style>
 
-      <div className="header">
-        <Image src="/settings512.png" alt="Fork in Road Logo" width={100} height={100} />
-        <h1>choose</h1>
-      </div>
-
-      <div className="search-container">
-        <div className="input-wrapper">
-          <input
-            type="text"
-            id="query"
-            value={query}
-            onChange={handleQueryChange}
-            onKeyDown={handleKeyDown}
-            className={`search-input ${query ? "has-text" : ""}`}
-            placeholder="search"
-            autoComplete="off"
-            autoCorrect="on"
-            autoCapitalize="on"
-          />
-          <button
-            className="search-icon"
-            onClick={handleMagnifyingGlassClick}
-            disabled={!query}
-            aria-label="Search"
-          >
-            🔍
-          </button>
-          {isLoading && (
-            <div className="loading-bar-container">
-              <div className="loading-bar"></div>
-            </div>
-          )}
-          {showSuggestions && (
-            <div className="suggestions">
-              {suggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="container">
         {recentSearches.length > 0 && (
           <button className="history-button" onClick={toggleSidebar}>
             <svg
@@ -1572,235 +1528,282 @@ export default function SearchForm() {
             History
           </button>
         )}
-      </div>
 
-      {/* Sidebar for Recent Searches */}
-      {recentSearches.length > 0 && (
-        <>
-          <div className="sidebar-overlay" onClick={toggleSidebar}></div>
-          <div className="sidebar">
-            <div className="sidebar-header">
-              <div className="sidebar-title">Recent Searches</div>
-              <div className="close-sidebar" onClick={toggleSidebar}>
-                Close
-              </div>
-            </div>
-            <div className="recent-searches">
-              <div className="recent-searches-header">
-                <div className="recent-searches-title">Recent Searches</div>
-                <div className="clear-history" onClick={handleClearHistory}>
-                  Clear History
-                </div>
-              </div>
-              {recentSearches.map((search, index) => (
-                <div
-                  key={index}
-                  className="recent-search-item"
-                  onClick={() => handleRecentSearchClick(search)}
-                >
-                  {search.query}
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+        <div className="header">
+          <Image src="/settings512.png" alt="Fork in Road Logo" width={100} height={100} />
+          <h1>choose</h1>
+        </div>
 
-      <div className="search-buttons">
-        <button
-          onClick={() => handleSearch(query)}
-          className={`search-button ${!query ? "button-disabled" : ""}`}
-          disabled={!query}
-        >
-          Fork It
-        </button>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-      {grokResult && (
-        <>
-          <div className="results-header">
-            <div className="results-header-text">Grok Results</div>
-            <div className="action-buttons">
-              <div className="action-button" onClick={handleCopy}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                {isCopied ? "Copied!" : "Copy"}
+        <div className="search-container">
+          <div className="input-wrapper">
+            <input
+              type="text"
+              id="query"
+              value={query}
+              onChange={handleQueryChange}
+              onKeyDown={handleKeyDown}
+              className={`search-input ${query ? "has-text" : ""}`}
+              placeholder="search"
+              autoComplete="off"
+              autoCorrect="on"
+              autoCapitalize="on"
+            />
+            <button
+              className="search-icon"
+              onClick={handleMagnifyingGlassClick}
+              disabled={!query}
+              aria-label="Search"
+            >
+              🔍
+            </button>
+            {isLoading && (
+              <div className="loading-bar-container">
+                <div className="loading-bar"></div>
               </div>
-              <div className="action-button" onClick={handleShare}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                {shareMessage || "Share"}
-              </div>
-              <div className="action-button" onClick={() => setShowRefineModal(true)}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Refine
-              </div>
-              <div className="action-button" onClick={handleClearResults}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 6h18"></path>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-                Clear
-              </div>
-            </div>
-          </div>
-          <div
-            className="results-container"
-            style={viewMode === "raw" ? { whiteSpace: "pre-wrap" } : {}}
-          >
-            {viewMode === "rendered" ? (
-              <div dangerouslySetInnerHTML={renderMarkdown(grokResult)} />
-            ) : (
-              <pre>{grokResult}</pre>
             )}
-          </div>
-          {braveResults.length > 0 && (
-            <>
-              <div className="url-results-header">Web Results</div>
-              <div className="url-results-container" ref={containerRef}>
-                {braveResults.map((result, index) => (
-                  <div key={`${result.url}-${index}`} className="url-result-item">
-                    <a
-                      href={result.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="url-result-title"
-                    >
-                      {result.title}
-                    </a>
-                    <div className="url-result-url">{result.url}</div>
-                    <div className="url-result-description">{result.description}</div>
+            {showSuggestions && (
+              <div className="suggestions">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
                   </div>
                 ))}
-                <div className="loading-more" ref={loadMoreRef}>
-                  {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
-                </div>
               </div>
-            </>
-          )}
-          <div className="feedback-section">
-            <span
-              className="feedback-button"
-              onClick={() => handleFeedback("up")}
-              role="img"
-              aria-label="Thumbs Up"
-            >
-              👍
-            </span>
-            <span
-              className="feedback-button"
-              onClick={() => handleFeedback("down")}
-              role="img"
-              aria-label="Thumbs Down"
-            >
-              👎
-            </span>
-            {feedbackMessage && <span className="feedback-message">{feedbackMessage}</span>}
-          </div>
-          <div className="ad-container">
-            <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
-          </div>
-        </>
-      )}
-
-      {showRefineModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-title">Refine Your Result</div>
-            <div className="refine-modal-input-container">
-              <input
-                type="text"
-                className="refine-modal-input"
-                value={refineInput}
-                onChange={(e) => setRefineInput(e.target.value)}
-                placeholder="Enter refinement instruction"
-              />
-            </div>
-            <div className="modal-buttons">
-              <button onClick={handleRefineSubmit} className="modal-button">
-                Submit
-              </button>
-              <button onClick={closeRefineModal} className="modal-button">
-                Cancel
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="download-section">
-        <div className="download-text">Get the Fork in Road Safari extension.</div>
-        <a
-          href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="download-button"
-        >
-          <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
-        </a>
-        <div className="powered-by">
-          Powered by{" "}
-          <a href="https://x.ai" target="_blank" rel="noopener noreferrer">
-            Grok
-          </a>{" "}
-          and{" "}
-          <a href="https://brave.com" target="_blank" rel="noopener noreferrer">
-            Brave
+        {/* Sidebar for Recent Searches */}
+        {recentSearches.length > 0 && (
+          <>
+            <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+            <div className="sidebar">
+              <div className="sidebar-header">
+                <div className="close-sidebar" onClick={toggleSidebar}>
+                  Close
+                </div>
+              </div>
+              <div className="recent-searches">
+                <div className="recent-searches-header">
+                  <div className="recent-searches-title">Recent Searches</div>
+                  <div className="clear-history" onClick={handleClearHistory}>
+                    Clear History
+                  </div>
+                </div>
+                {recentSearches.map((search, index) => (
+                  <div
+                    key={index}
+                    className="recent-search-item"
+                    onClick={() => handleRecentSearchClick(search)}
+                  >
+                    {search.query}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="search-buttons">
+          <button
+            onClick={() => handleSearch(query)}
+            className={`search-button ${!query ? "button-disabled" : ""}`}
+            disabled={!query}
+          >
+            Fork It
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        {grokResult && (
+          <>
+            <div className="results-header">
+              <div className="results-header-text">Grok Results</div>
+              <div className="action-buttons">
+                <div className="action-button" onClick={handleCopy}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  {isCopied ? "Copied!" : "Copy"}
+                </div>
+                <div className="action-button" onClick={handleShare}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg>
+                  {shareMessage || "Share"}
+                </div>
+                <div className="action-button" onClick={() => setShowRefineModal(true)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Refine
+                </div>
+                <div className="action-button" onClick={handleClearResults}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                  Clear
+                </div>
+              </div>
+            </div>
+            <div
+              className="results-container"
+              style={viewMode === "raw" ? { whiteSpace: "pre-wrap" } : {}}
+            >
+              {viewMode === "rendered" ? (
+                <div dangerouslySetInnerHTML={renderMarkdown(grokResult)} />
+              ) : (
+                <pre>{grokResult}</pre>
+              )}
+            </div>
+            {braveResults.length > 0 && (
+              <>
+                <div className="url-results-header">Web Results</div>
+                <div className="url-results-container" ref={containerRef}>
+                  {braveResults.map((result, index) => (
+                    <div key={`${result.url}-${index}`} className="url-result-item">
+                      <a
+                        href={result.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="url-result-title"
+                      >
+                        {result.title}
+                      </a>
+                      <div className="url-result-url">{result.url}</div>
+                      <div className="url-result-description">{result.description}</div>
+                    </div>
+                  ))}
+                  <div className="loading-more" ref={loadMoreRef}>
+                    {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
+                  </div>
+                </div>
+              </>
+            )}
+            <div className="feedback-section">
+              <span
+                className="feedback-button"
+                onClick={() => handleFeedback("up")}
+                role="img"
+                aria-label="Thumbs Up"
+              >
+                👍
+              </span>
+              <span
+                className="feedback-button"
+                onClick={() => handleFeedback("down")}
+                role="img"
+                aria-label="Thumbs Down"
+              >
+                👎
+              </span>
+              {feedbackMessage && <span className="feedback-message">{feedbackMessage}</span>}
+            </div>
+            <div className="ad-container">
+              <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
+            </div>
+          </>
+        )}
+
+        {showRefineModal && (
+          <div className="modal">
+            <div className="modal-content">
+              <div className="modal-title">Refine Your Result</div>
+              <div className="refine-modal-input-container">
+                <input
+                  type="text"
+                  className="refine-modal-input"
+                  value={refineInput}
+                  onChange={(e) => setRefineInput(e.target.value)}
+                  placeholder="Enter refinement instruction"
+                />
+              </div>
+              <div className="modal-buttons">
+                <button onClick={handleRefineSubmit} className="modal-button">
+                  Submit
+                </button>
+                <button onClick={closeRefineModal} className="modal-button">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="download-section">
+          <div className="download-text">Get the Fork in Road Safari extension.</div>
+          <a
+            href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="download-button"
+          >
+            <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
           </a>
+          <div className="powered-by">
+            Powered by{" "}
+            <a href="https://x.ai" target="_blank" rel="noopener noreferrer">
+              Grok
+            </a>{" "}
+            and{" "}
+            <a href="https://brave.com" target="_blank" rel="noopener noreferrer">
+              Brave
+            </a>
+          </div>
         </div>
       </div>
     </div>
