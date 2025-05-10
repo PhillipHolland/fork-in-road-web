@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import Link from "next/link";
 
 // Configure marked to run synchronously
 marked.setOptions({
@@ -47,7 +48,7 @@ export default function SearchForm() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false); // New state for nested history panel
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
@@ -863,6 +864,15 @@ export default function SearchForm() {
         .menu-option svg {
           width: 16px;
           height: 16px;
+        }
+
+        .menu-option-link {
+          text-decoration: none;
+          color: inherit;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
         }
 
         .history-panel {
@@ -1808,6 +1818,24 @@ export default function SearchForm() {
               </button>
             </div>
             <div className="menu-options">
+              <Link href="/chat" className="menu-option-link" onClick={toggleMenu}>
+                <div className="menu-option">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  Chat
+                </div>
+              </Link>
               <div className="menu-option" onClick={toggleHistory}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
