@@ -1039,11 +1039,11 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
-          margin-top: ${isLoading ? "0px" : "10px"}; /* Adjust margin-top based on isLoading */
+          margin-top: ${isLoading ? "-4px" : "10px"}; /* Align closer to Show History button: -16px (progress bar bottom) + 8px (progress bar height) + 4px (gap) */
         }
 
         .search-buttons.loading {
-          margin-top: -8px; /* Position just below progress bar: -16px (progress bar bottom) + 8px (progress bar height) + 4px (gap) */
+          margin-top: -4px; /* Ensure alignment when progress bar is present */
         }
 
         .search-button {
@@ -1363,12 +1363,12 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: ${isLoading ? "-2px" : "8px"}; /* -14px (progress bar bottom) + 6px (progress bar height) + 4px (gap) */
+            margin-top: ${isLoading ? "-4px" : "8px"}; /* Align closer to Show History button: -14px (progress bar bottom) + 6px (progress bar height) + 4px (gap) */
             margin-bottom: 15px;
           }
 
           .search-buttons.loading {
-            margin-top: -8px; /* Adjust for mobile progress bar height */
+            margin-top: -4px; /* Ensure alignment when progress bar is present */
           }
 
           .search-button {
