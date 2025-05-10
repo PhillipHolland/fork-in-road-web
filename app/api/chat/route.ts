@@ -1,4 +1,4 @@
-import { createXai } from '@ai-sdk/xai'; // Fixed casing: createXai instead of createXAI
+import { createXai } from '@ai-sdk/xai';
 import { streamText } from 'ai';
 
 // Initialize the xAI client with the Grok API
@@ -15,5 +15,5 @@ export async function POST(req: Request) {
     messages,
   });
 
-  return response.toAIStreamResponse();
+  return response.toDataStreamResponse(); // Changed from toAIStreamResponse to toDataStreamResponse
 }

@@ -206,7 +206,7 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchResults = async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
+  const fetchResults = useCallback(async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
     if (page === 1) {
       setIsLoading(true);
     } else {
@@ -309,7 +309,7 @@ export default function SearchForm() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [refineInput, originalQuery, grokResult, resultsPerPage, maxTotalResults]); // Dependencies for fetchResults
 
   // Handle search (used by both button click, Enter key, magnifying glass click, and autocomplete selection)
   const handleSearch = (q: string) => {
@@ -378,7 +378,7 @@ export default function SearchForm() {
         return nextPage;
       });
     }, 300);
-  }, [query, fetchResults]); // Added fetchResults to dependency array
+  }, [query, fetchResults]);
 
   // Set up Intersection Observer for infinite scroll
   const handleObserver = useCallback(
