@@ -47,29 +47,27 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="layout-container">
-      <div className="header-buttons">
-        <button className="menu-button" onClick={toggleMenu}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
+      <button className="menu-button" onClick={toggleMenu}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
 
-        <Link href={iconLink} className="action-button">
-          {IconSVG}
-        </Link>
-      </div>
+      <Link href={iconLink} className="action-button">
+        {IconSVG}
+      </Link>
 
       <div className="menu-overlay" onClick={toggleMenu}></div>
       <div className="menu">
@@ -122,17 +120,10 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           position: relative;
         }
 
-        .header-buttons {
+        .menu-button {
           position: fixed;
           top: 20px;
           left: 20px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          z-index: 1002;
-        }
-
-        .menu-button {
           padding: 10px;
           background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
@@ -149,6 +140,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           justify-content: center;
           width: 44px;
           height: 44px;
+          z-index: 1002;
         }
 
         .menu-button:hover {
@@ -163,6 +155,9 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         }
 
         .action-button {
+          position: fixed;
+          top: 20px;
+          right: 20px;
           padding: 10px;
           background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
@@ -179,6 +174,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           justify-content: center;
           width: 44px;
           height: 44px;
+          z-index: 1002;
         }
 
         .action-button:hover {
@@ -295,13 +291,9 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         }
 
         @media (max-width: 850px) {
-          .header-buttons {
+          .menu-button {
             top: 15px;
             left: 15px;
-            gap: 8px;
-          }
-
-          .menu-button {
             padding: 8px;
             width: 40px;
             height: 40px;
@@ -313,6 +305,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           }
 
           .action-button {
+            top: 15px;
+            right: 15px;
             padding: 8px;
             width: 40px;
             height: 40px;
