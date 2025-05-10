@@ -1410,7 +1410,7 @@ export default function SearchForm() {
 
       <div className="header">
         <Image src="/settings512.png" alt="Fork in Road Logo" width={100} height={100} />
-        <h1>choose</h1> {/* Updated from "choose your path" to "choose" */}
+        <h1>choose</h1>
       </div>
 
       <div className="search-container">
@@ -1669,7 +1669,7 @@ export default function SearchForm() {
         </a>
         <div className="powered-by">
           Powered by{" "}
-          <a href="https://grok.com" target="_blank" rel="noopener noreferrer">
+          <a href="https://x.ai" target="_blank" rel="noopener noreferrer">
             Grok
           </a>{" "}
           and{" "}
