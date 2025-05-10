@@ -534,7 +534,7 @@ export default function SearchForm() {
 
         .search-container {
           position: relative;
-          margin-bottom: 5px; /* Reduced from 10px to minimize space */
+          margin-bottom: 10px; /* Adjusted to ensure consistent spacing */
         }
 
         .search-input {
@@ -935,9 +935,8 @@ export default function SearchForm() {
         }
 
         .recent-searches {
-          margin-top: 10px;
-          margin-bottom: 20px;
-          text-align: left;
+          margin-top: 0; /* Remove top margin to align with Fork It button */
+          margin-bottom: 15px;
         }
 
         .recent-searches-header {
@@ -990,6 +989,8 @@ export default function SearchForm() {
 
         .show-history-container {
           text-align: left;
+          margin-top: 0; /* Align with Fork It button */
+          margin-bottom: 0;
         }
 
         .show-history-button {
@@ -1001,8 +1002,8 @@ export default function SearchForm() {
           color: #333;
           cursor: pointer;
           transition: background 0.2s, color 0.2s;
-          margin-top: 10px;
-          margin-bottom: 5px; /* Reduced from 20px to minimize space */
+          margin-top: 0; /* Remove top margin */
+          margin-bottom: 5px;
           display: inline-block;
         }
 
@@ -1038,12 +1039,8 @@ export default function SearchForm() {
         .search-buttons {
           display: flex;
           justify-content: center;
-          margin-bottom: 20px;
-          margin-top: ${isLoading ? "-8px" : "5px"}; /* Further reduced to align closely with Show History button */
-        }
-
-        .search-buttons.loading {
-          margin-top: -8px; /* Adjusted to -8px to bring it closer: -16px (progress bar bottom) + 8px (progress bar height) */
+          margin-bottom: 15px;
+          margin-top: 10px; /* Fixed distance from search bar: 10px (search-container margin-bottom) + 10px = 20px below search input */
         }
 
         .search-button {
@@ -1175,7 +1172,7 @@ export default function SearchForm() {
             width: 90%;
             margin-left: auto;
             margin-right: auto;
-            margin-bottom: 5px; /* Reduced from 10px */
+            margin-bottom: 10px;
           }
 
           .search-input {
@@ -1351,7 +1348,7 @@ export default function SearchForm() {
           .show-history-button {
             padding: 3px 6px;
             font-size: 10px;
-            margin-bottom: 5px; /* Reduced from 20px */
+            margin-bottom: 5px;
           }
 
           .refine-modal-input-container {
@@ -1365,12 +1362,8 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: ${isLoading ? "-8px" : "5px"}; /* Align closely with Show History button */
+            margin-top: 10px; /* Consistent spacing: 10px (search-container margin-bottom) + 10px = 20px below search input */
             margin-bottom: 15px;
-          }
-
-          .search-buttons.loading {
-            margin-top: -8px; /* Adjusted to -8px to bring it closer */
           }
 
           .search-button {
@@ -1487,7 +1480,7 @@ export default function SearchForm() {
         </div>
       )}
 
-      <div className={`search-buttons ${isLoading ? "loading" : ""}`}>
+      <div className="search-buttons">
         <button
           onClick={() => handleSearch(query)}
           className={`search-button ${!query ? "button-disabled" : ""}`}
