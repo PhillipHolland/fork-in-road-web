@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import Link from "next/link";
 
 // Configure marked to run synchronously
 marked.setOptions({
@@ -47,8 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Renamed from isSidebarOpen
   const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
@@ -206,7 +204,7 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchResults = useCallback(async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
+  const fetchResults = async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
     if (page === 1) {
       setIsLoading(true);
     } else {
@@ -309,7 +307,7 @@ export default function SearchForm() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [refineInput, originalQuery, grokResult, resultsPerPage, maxTotalResults]); // Dependencies for fetchResults
+  };
 
   // Handle search (used by both button click, Enter key, magnifying glass click, and autocomplete selection)
   const handleSearch = (q: string) => {
@@ -355,14 +353,6 @@ export default function SearchForm() {
   // Toggle menu visibility
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
-    if (isMenuOpen && isHistoryOpen) {
-      setIsHistoryOpen(false); // Close nested history panel when closing main menu
-    }
-  };
-
-  // Toggle history panel visibility
-  const toggleHistory = () => {
-    setIsHistoryOpen((prev) => !prev);
   };
 
   // Debounced fetch handler for Intersection Observer
@@ -378,7 +368,7 @@ export default function SearchForm() {
         return nextPage;
       });
     }, 300);
-  }, [query, fetchResults]);
+  }, [query]);
 
   // Set up Intersection Observer for infinite scroll
   const handleObserver = useCallback(
@@ -499,8 +489,7 @@ export default function SearchForm() {
     setTotalResults(0);
     setTotalFetchedResults(0);
     setHasMore(true);
-    setIsMenuOpen(false);
-    setIsHistoryOpen(false);
+    setIsMenuOpen(false); // Close menu after selecting a recent search
   };
 
   // Clear recent searches
@@ -747,25 +736,31 @@ export default function SearchForm() {
           top: 20px;
           left: 20px;
           padding: 8px;
-          background: rgba(0, 0, 0, 0.8);
-          border: 1px solid #333;
+          background: #000;
           color: #fff;
+          border: none;
           border-radius: 20px;
           font-size: 16px;
           text-align: center;
           text-decoration: none;
           cursor: pointer;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
+          transition: background 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .menu-button:hover {
-          background: rgba(231, 207, 44, 0.2);
-          border-color: #e7cf2c;
+          background: #333;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .menu-button.button-disabled {
+          background: #ccc;
+          color: #666;
+          cursor: not-allowed;
+          box-shadow: none;
         }
 
         .menu-button svg {
@@ -792,15 +787,13 @@ export default function SearchForm() {
           top: 0;
           height: 100%;
           width: 250px;
-          background: #1a1a1a;
-          color: #fff;
-          border-right: 1px solid #333;
+          background: #f9f9f9;
+          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
           z-index: 1001;
           transform: ${isMenuOpen ? "translateX(0)" : "translateX(-100%)"};
           transition: transform 0.3s ease;
           padding: 20px;
           box-sizing: border-box;
-          font-size: 16px;
           overflow-y: auto;
         }
 
@@ -808,12 +801,12 @@ export default function SearchForm() {
           display: flex;
           justify-content: flex-end;
           align-items: center;
-          margin-bottom: 20px;
+          margin-bottom: 10px;
         }
 
         .close-menu {
           padding: 8px;
-          background: #333;
+          background: #000;
           color: #fff;
           border: none;
           border-radius: 20px;
@@ -839,116 +832,28 @@ export default function SearchForm() {
           height: 14px;
         }
 
-        .menu-options {
+        .recent-searches {
           margin-top: 0;
           margin-bottom: 0;
         }
 
-        .menu-option {
-          padding: 10px;
-          background: #2a2a2a;
-          border-radius: 8px;
-          margin-bottom: 10px;
-          cursor: pointer;
+        .recent-searches-header {
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 8px;
-          transition: background 0.2s, color 0.2s;
-        }
-
-        .menu-option:hover {
-          background: #3a3a3a;
-          color: #e7cf2c;
-        }
-
-        .menu-option svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .menu-option-link {
-          text-decoration: none;
-          color: inherit;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          width: 100%;
-        }
-
-        .history-panel {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: #2a2a2a;
-          transform: ${isHistoryOpen ? "translateX(0)" : "translateX(100%)"};
-          transition: transform 0.3s ease;
-          padding: 20px;
-          box-sizing: border-box;
-          overflow-y: auto;
-        }
-
-        .history-panel-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-
-        .back-button {
-          padding: 8px;
-          background: none;
-          border: none;
-          color: #e7cf2c;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: color 0.2s;
-        }
-
-        .back-button:hover {
-          color: #fff;
-        }
-
-        .back-button svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .history-panel-title {
-          font-size: 16px;
-          font-weight: bold;
-          color: #fff;
-        }
-
-        .recent-searches {
-          margin-top: 0;
           margin-bottom: 10px;
         }
 
-        .recent-search-item {
-          padding: 8px;
-          background: #3a3a3a;
-          border-radius: 4px;
-          margin-bottom: 5px;
-          cursor: pointer;
+        .recent-searches-title {
           font-size: 14px;
-          color: #fff;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .recent-search-item:hover {
-          background: #4a4a4a;
+          font-weight: bold;
+          color: #333;
         }
 
         .clear-history {
-          padding: 6px 12px;
-          background: #e7cf2c;
-          color: #000;
+          padding: 8px 16px;
+          background: #000;
+          color: #fff;
           border: none;
           border-radius: 20px;
           font-size: 14px;
@@ -960,14 +865,27 @@ export default function SearchForm() {
         }
 
         .clear-history:hover {
-          background: #d4bc25;
+          background: #e7cf2c;
+          color: #000;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .no-recent-searches {
+        .recent-search-item {
+          padding: 8px;
+          background: #fff;
+          border: 1px solid #eee;
+          border-radius: 4px;
+          margin-bottom: 5px;
+          cursor: pointer;
           font-size: 14px;
-          color: #aaa;
-          text-align: center;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .recent-search-item:hover {
+          background: #f0f0f0;
         }
 
         .results-container {
@@ -1474,50 +1392,19 @@ export default function SearchForm() {
             height: 12px;
           }
 
-          .menu-option {
-            padding: 8px;
-            margin-bottom: 8px;
+          .recent-searches-title {
+            font-size: 12px;
           }
 
-          .menu-option svg {
-            width: 14px;
-            height: 14px;
-          }
-
-          .history-panel {
-            padding: 15px;
-          }
-
-          .history-panel-header {
-            margin-bottom: 15px;
-          }
-
-          .history-panel-title {
-            font-size: 14px;
-          }
-
-          .back-button {
-            padding: 6px;
-          }
-
-          .back-button svg {
-            width: 14px;
-            height: 14px;
+          .clear-history {
+            padding: 6px 12px;
+            font-size: 12px;
           }
 
           .recent-search-item {
             padding: 6px;
             font-size: 12px;
             margin-bottom: 4px;
-          }
-
-          .clear-history {
-            padding: 4px 10px;
-            font-size: 12px;
-          }
-
-          .no-recent-searches {
-            font-size: 12px;
           }
 
           .loading-bar-container {
@@ -1714,23 +1601,25 @@ export default function SearchForm() {
       `}</style>
 
       <div className="container">
-        <button className="menu-button" onClick={toggleMenu}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
+        {recentSearches.length > 0 && (
+          <button className="menu-button" onClick={toggleMenu}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        )}
 
         <div className="header">
           <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} />
@@ -1795,35 +1684,17 @@ export default function SearchForm() {
           </div>
         </div>
 
-        {/* Menu */}
-        <>
-          <div className="menu-overlay" onClick={toggleMenu}></div>
-          <div className="menu">
-            <div className="menu-header">
-              <button className="close-menu" onClick={toggleMenu}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="menu-options">
-              <Link href="/chat" className="menu-option-link" onClick={toggleMenu}>
-                <div className="menu-option">
+        {/* Menu for Recent Searches */}
+        {recentSearches.length > 0 && (
+          <>
+            <div className="menu-overlay" onClick={toggleMenu}></div>
+            <div className="menu">
+              <div className="menu-header">
+                <button className="close-menu" onClick={toggleMenu}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -1831,75 +1702,31 @@ export default function SearchForm() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  Chat
-                </div>
-              </Link>
-              <div className="menu-option" onClick={toggleHistory}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2a10 10 0 0 0-7.68 16.61M12 6v6l4 2"></path>
-                  <path d="M21 16v5h-5"></path>
-                  <path d="M21 21L9 9"></path>
-                </svg>
-                History
-              </div>
-            </div>
-
-            {/* Nested History Panel */}
-            <div className="history-panel">
-              <div className="history-panel-header">
-                <button className="back-button" onClick={toggleHistory}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
-                <div className="history-panel-title">Recent Searches</div>
               </div>
-              {recentSearches.length > 0 ? (
-                <>
-                  <div className="recent-searches">
-                    {recentSearches.map((search, index) => (
-                      <div
-                        key={index}
-                        className="recent-search-item"
-                        onClick={() => handleRecentSearchClick(search)}
-                      >
-                        {search.query}
-                      </div>
-                    ))}
-                  </div>
+              <div className="recent-searches">
+                <div className="recent-searches-header">
+                  <div className="recent-searches-title">Recent Searches</div>
                   <button className="clear-history" onClick={handleClearHistory}>
                     Clear History
                   </button>
-                </>
-              ) : (
-                <div className="no-recent-searches">No recent searches</div>
-              )}
+                </div>
+                {recentSearches.map((search, index) => (
+                  <div
+                    key={index}
+                    className="recent-search-item"
+                    onClick={() => handleRecentSearchClick(search)}
+                  >
+                    {search.query}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </>
+          </>
+        )}
 
         <div className="search-buttons">
           <button
