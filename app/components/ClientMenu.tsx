@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function ClientMenu() {
+export default function ClientMenu({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -11,7 +11,7 @@ export default function ClientMenu() {
   };
 
   return (
-    <>
+    <div className="layout-container">
       <button className="menu-button" onClick={toggleMenu}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -91,7 +91,14 @@ export default function ClientMenu() {
         </div>
       </div>
 
+      {children}
+
       <style jsx>{`
+        .layout-container {
+          min-height: 100vh;
+          position: relative;
+        }
+
         .menu-button {
           position: fixed;
           top: 20px;
@@ -263,6 +270,6 @@ export default function ClientMenu() {
           }
         }
       `}</style>
-    </>
+    </div>
   );
 }

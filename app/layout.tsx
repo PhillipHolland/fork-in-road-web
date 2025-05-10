@@ -15,17 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="layout-container">
-          <ClientMenu />
-          {children}
-        </div>
-
-        <style jsx>{`
-          .layout-container {
-            min-height: 100vh;
-            position: relative;
-          }
-        `}</style>
+        <ClientMenu>{children}</ClientMenu>
       </body>
     </html>
   );
