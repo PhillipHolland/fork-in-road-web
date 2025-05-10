@@ -534,7 +534,7 @@ export default function SearchForm() {
 
         .search-container {
           position: relative;
-          margin-bottom: 10px;
+          margin-bottom: 5px; /* Reduced from 10px to minimize space */
         }
 
         .search-input {
@@ -1002,7 +1002,7 @@ export default function SearchForm() {
           cursor: pointer;
           transition: background 0.2s, color 0.2s;
           margin-top: 10px;
-          margin-bottom: 20px;
+          margin-bottom: 5px; /* Reduced from 20px to minimize space */
           display: inline-block;
         }
 
@@ -1039,11 +1039,11 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
-          margin-top: ${isLoading ? "-4px" : "10px"}; /* Align closer to Show History button: -16px (progress bar bottom) + 8px (progress bar height) + 4px (gap) */
+          margin-top: ${isLoading ? "-8px" : "5px"}; /* Further reduced to align closely with Show History button */
         }
 
         .search-buttons.loading {
-          margin-top: -4px; /* Ensure alignment when progress bar is present */
+          margin-top: -8px; /* Adjusted to -8px to bring it closer: -16px (progress bar bottom) + 8px (progress bar height) */
         }
 
         .search-button {
@@ -1175,6 +1175,7 @@ export default function SearchForm() {
             width: 90%;
             margin-left: auto;
             margin-right: auto;
+            margin-bottom: 5px; /* Reduced from 10px */
           }
 
           .search-input {
@@ -1350,6 +1351,7 @@ export default function SearchForm() {
           .show-history-button {
             padding: 3px 6px;
             font-size: 10px;
+            margin-bottom: 5px; /* Reduced from 20px */
           }
 
           .refine-modal-input-container {
@@ -1363,12 +1365,12 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: ${isLoading ? "-4px" : "8px"}; /* Align closer to Show History button: -14px (progress bar bottom) + 6px (progress bar height) + 4px (gap) */
+            margin-top: ${isLoading ? "-8px" : "5px"}; /* Align closely with Show History button */
             margin-bottom: 15px;
           }
 
           .search-buttons.loading {
-            margin-top: -4px; /* Ensure alignment when progress bar is present */
+            margin-top: -8px; /* Adjusted to -8px to bring it closer */
           }
 
           .search-button {
