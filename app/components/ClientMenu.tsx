@@ -133,8 +133,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           text-align: center;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-          transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
+          transition: background 0.3s, border-color 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -146,7 +145,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         .menu-button:hover {
           background: rgba(231, 207, 44, 0.2);
           border-color: #e7cf2c;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
         .menu-button svg {
@@ -167,8 +165,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           text-align: center;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-          transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
+          transition: background 0.3s, border-color 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -180,7 +177,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         .action-button:hover {
           background: rgba(231, 207, 44, 0.2);
           border-color: #e7cf2c;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
         .action-button svg {
@@ -236,8 +232,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           text-align: center;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          transition: background 0.3s, box-shadow 0.3s ease;
+          transition: background 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -246,7 +241,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         .close-menu:hover {
           background: #e7cf2c;
           color: #000;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
         .close-menu svg {
