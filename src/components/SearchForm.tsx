@@ -539,7 +539,7 @@ export default function SearchForm() {
         }
 
         .header {
-          margin-bottom: 15px; /* Reduced from 20px to close the gap */
+          margin-bottom: 15px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -571,7 +571,7 @@ export default function SearchForm() {
 
         .search-input {
           width: 100%;
-          padding: 10px 60px 10px 10px; /* Increased padding-right to accommodate the "x" button */
+          padding: 10px 80px 10px 10px; /* Adjusted padding-right to accommodate the "x" button */
           border: 1px solid #ccc;
           border-radius: 20px;
           font-size: 16px;
@@ -610,12 +610,12 @@ export default function SearchForm() {
           background: #e7cf2c; /* Same color as the progress bar */
           border-top-right-radius: 20px;
           border-bottom-right-radius: 20px;
-          z-index: 0; /* Behind the icons */
+          z-index: 0; /* Behind the icon */
         }
 
         .clear-icon {
           position: absolute;
-          right: 40px; /* Position to the left of the search-icon-container */
+          right: 55px; /* Positioned to the left of the search-icon-container */
           top: 50%;
           transform: translateY(-50%);
           width: 20px;
@@ -1338,7 +1338,7 @@ export default function SearchForm() {
 
           .search-input {
             width: 100%;
-            padding: 8px 55px 8px 8px; /* Increased padding-right for mobile */
+            padding: 8px 70px 8px 8px; /* Adjusted padding-right for mobile */
             font-size: 16px;
             touch-action: pan-y;
           }
@@ -1357,7 +1357,7 @@ export default function SearchForm() {
           }
 
           .clear-icon {
-            right: 35px; /* Position to the left of the search-icon-container on mobile */
+            right: 47px; /* Positioned to the left of the search-icon-container on mobile */
             width: 18px;
             height: 18px;
             font-size: 18px;
@@ -1648,6 +1648,7 @@ export default function SearchForm() {
               />
               {query && (
                 <button
+                  key="clear-icon"
                   type="button"
                   className="clear-icon"
                   onClick={handleClearResults}
