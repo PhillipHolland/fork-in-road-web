@@ -1,6 +1,6 @@
 'use client';
 
-import { useChat } from 'ai';
+import { useChat } from '@ai-sdk/react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { marked } from 'marked';
