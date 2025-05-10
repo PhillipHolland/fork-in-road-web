@@ -534,7 +534,7 @@ export default function SearchForm() {
 
         .search-container {
           position: relative;
-          margin-bottom: 10px; /* Adjusted to ensure consistent spacing */
+          margin-bottom: 10px;
         }
 
         .search-input {
@@ -935,8 +935,9 @@ export default function SearchForm() {
         }
 
         .recent-searches {
-          margin-top: 0; /* Remove top margin to align with Fork It button */
+          margin-top: 0;
           margin-bottom: 15px;
+          text-align: left;
         }
 
         .recent-searches-header {
@@ -989,7 +990,7 @@ export default function SearchForm() {
 
         .show-history-container {
           text-align: left;
-          margin-top: 0; /* Align with Fork It button */
+          margin-top: 0;
           margin-bottom: 0;
         }
 
@@ -1002,7 +1003,7 @@ export default function SearchForm() {
           color: #333;
           cursor: pointer;
           transition: background 0.2s, color 0.2s;
-          margin-top: 0; /* Remove top margin */
+          margin-top: 0;
           margin-bottom: 5px;
           display: inline-block;
         }
@@ -1040,7 +1041,7 @@ export default function SearchForm() {
           display: flex;
           justify-content: center;
           margin-bottom: 15px;
-          margin-top: 10px; /* Fixed distance from search bar: 10px (search-container margin-bottom) + 10px = 20px below search input */
+          margin-top: 18px; /* Fixed distance: 10px (search-container margin-bottom) + 18px = 28px below search input */
         }
 
         .search-button {
@@ -1362,7 +1363,7 @@ export default function SearchForm() {
           }
 
           .search-buttons {
-            margin-top: 10px; /* Consistent spacing: 10px (search-container margin-bottom) + 10px = 20px below search input */
+            margin-top: 18px; /* Consistent spacing: 10px (search-container margin-bottom) + 18px = 28px below search input */
             margin-bottom: 15px;
           }
 
@@ -1668,7 +1669,7 @@ export default function SearchForm() {
         </a>
         <div className="powered-by">
           Powered by{" "}
-          <a href="https://grok.ai" target="_blank" rel="noopener noreferrer">
+          <a href="https://grok.com" target="_blank" rel="noopener noreferrer">
             Grok
           </a>{" "}
           and{" "}
