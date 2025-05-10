@@ -571,7 +571,7 @@ export default function SearchForm() {
 
         .search-input {
           width: 100%;
-          padding: 10px 80px 10px 10px; /* Adjusted padding-right to accommodate the "x" button */
+          padding: 10px 65px 10px 10px; /* Adjusted padding-right: 40px (search-icon-container) + 20px (clear-icon) + 5px (buffer) */
           border: 1px solid #ccc;
           border-radius: 20px;
           font-size: 16px;
@@ -580,6 +580,8 @@ export default function SearchForm() {
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
           transition: box-shadow 0.3s ease, border-color 0.3s ease;
           touch-action: pan-y;
+          position: relative;
+          z-index: 0; /* Ensure the input's border is above the yellow square */
         }
 
         .search-input:hover {
@@ -592,7 +594,7 @@ export default function SearchForm() {
 
         .search-icon-container {
           position: absolute;
-          right: 15px;
+          right: 0; /* Align to the right edge of the input */
           top: 50%;
           transform: translateY(-50%);
           width: 40px;
@@ -610,12 +612,12 @@ export default function SearchForm() {
           background: #e7cf2c; /* Same color as the progress bar */
           border-top-right-radius: 20px;
           border-bottom-right-radius: 20px;
-          z-index: 0; /* Behind the icon */
+          z-index: -1; /* Place behind the input's border */
         }
 
         .clear-icon {
           position: absolute;
-          right: 55px; /* Positioned to the left of the search-icon-container */
+          right: 45px; /* 40px (search-icon-container) + 5px (buffer) */
           top: 50%;
           transform: translateY(-50%);
           width: 20px;
@@ -1338,13 +1340,13 @@ export default function SearchForm() {
 
           .search-input {
             width: 100%;
-            padding: 8px 70px 8px 8px; /* Adjusted padding-right for mobile */
+            padding: 8px 58px 8px 8px; /* Adjusted: 35px (search-icon-container) + 18px (clear-icon) + 5px (buffer) */
             font-size: 16px;
             touch-action: pan-y;
           }
 
           .search-icon-container {
-            right: 12px;
+            right: 0; /* Align to the right edge of the input */
             width: 35px;
             height: 35px;
           }
@@ -1357,7 +1359,7 @@ export default function SearchForm() {
           }
 
           .clear-icon {
-            right: 47px; /* Positioned to the left of the search-icon-container on mobile */
+            right: 40px; /* 35px (search-icon-container) + 5px (buffer) */
             width: 18px;
             height: 18px;
             font-size: 18px;
