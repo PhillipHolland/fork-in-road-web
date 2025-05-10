@@ -578,6 +578,12 @@ export default function SearchForm() {
           border-color: #e7cf2c;
         }
 
+        .search-icon-wrapper {
+          position: relative;
+          width: 20px;
+          height: 20px;
+        }
+
         .search-icon {
           position: absolute;
           right: 15px;
@@ -594,10 +600,25 @@ export default function SearchForm() {
           display: flex;
           align-items: center;
           justify-content: center;
+          z-index: 1; /* Ensure icon is above the square */
         }
 
         .search-icon:hover {
           color: #e7cf2c;
+        }
+
+        /* Add the colored square around the magnifying glass when active */
+        .search-icon-wrapper.active::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 24px;
+          height: 24px;
+          background: #e7cf2c; /* Same color as the progress bar */
+          border-radius: 4px;
+          z-index: 0; /* Behind the icon */
         }
 
         .loading-bar-container {
@@ -1284,11 +1305,21 @@ export default function SearchForm() {
             touch-action: pan-y;
           }
 
+          .search-icon-wrapper {
+            width: 18px;
+            height: 18px;
+          }
+
           .search-icon {
             width: 18px;
             height: 18px;
             right: 12px;
             font-size: 18px;
+          }
+
+          .search-icon-wrapper.active::before {
+            width: 22px;
+            height: 22px;
           }
 
           .history-button {
@@ -1567,14 +1598,16 @@ export default function SearchForm() {
               autoCorrect="on"
               autoCapitalize="on"
             />
-            <button
-              className="search-icon"
-              onClick={handleMagnifyingGlassClick}
-              disabled={!query}
-              aria-label="Search"
-            >
-              🔍
-            </button>
+            <div className={`search-icon-wrapper ${query ? "active" : ""}`}>
+              <button
+                className="search-icon"
+                onClick={handleMagnifyingGlassClick}
+                disabled={!query}
+                aria-label="Search"
+              >
+                🔍
+              </button>
+            </div>
             {isLoading && (
               <div className="loading-bar-container">
                 <div className="loading-bar"></div>
