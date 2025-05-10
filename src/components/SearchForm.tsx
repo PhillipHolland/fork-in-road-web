@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -46,7 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Renamed from isSidebarOpen
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [showClearIcon, setShowClearIcon] = useState<boolean>(false);
 
   // Refs for IntersectionObserver
@@ -204,7 +204,7 @@ export default function SearchForm() {
   };
 
   // Fetch Grok 3 API result via the server-side proxy and Brave Search results via server-side API route
-  const fetchResults = async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
+  const fetchResults = useCallback(async (q: string, page: number = 1, append: boolean = false, retryCount: number = resultsPerPage) => {
     if (page === 1) {
       setIsLoading(true);
     } else {
@@ -307,7 +307,7 @@ export default function SearchForm() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [refineInput, originalQuery, grokResult, resultsPerPage, maxTotalResults]);
 
   // Handle search (used by both button click, Enter key, magnifying glass click, and autocomplete selection)
   const handleSearch = (q: string) => {
@@ -350,9 +350,9 @@ export default function SearchForm() {
     }
   };
 
-  // Toggle menu visibility
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
+  // Toggle history panel visibility
+  const toggleHistory = () => {
+    setIsHistoryOpen((prev) => !prev);
   };
 
   // Debounced fetch handler for Intersection Observer
@@ -368,7 +368,7 @@ export default function SearchForm() {
         return nextPage;
       });
     }, 300);
-  }, [query]);
+  }, [query, fetchResults]);
 
   // Set up Intersection Observer for infinite scroll
   const handleObserver = useCallback(
@@ -489,7 +489,7 @@ export default function SearchForm() {
     setTotalResults(0);
     setTotalFetchedResults(0);
     setHasMore(true);
-    setIsMenuOpen(false); // Close menu after selecting a recent search
+    setIsHistoryOpen(false);
   };
 
   // Clear recent searches
@@ -532,10 +532,10 @@ export default function SearchForm() {
           max-width: 850px;
           margin: 0 auto;
           padding: 20px;
+          padding-top: 60px; /* Add padding to account for the menu button in the layout */
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
           box-sizing: border-box;
-          position: relative; /* For menu button positioning */
         }
 
         @media (min-width: 850px) {
@@ -731,129 +731,81 @@ export default function SearchForm() {
           color: #000;
         }
 
-        .menu-button {
-          position: absolute;
-          top: 20px;
-          left: 20px;
-          padding: 8px;
-          background: #000;
-          color: #fff;
-          border: none;
-          border-radius: 20px;
-          font-size: 16px;
-          text-align: center;
-          text-decoration: none;
-          cursor: pointer;
-          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          transition: background 0.3s, box-shadow 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .menu-button:hover {
-          background: #333;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
-        }
-
-        .menu-button.button-disabled {
-          background: #ccc;
-          color: #666;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        .menu-button svg {
-          width: 20px;
-          height: 20px;
-        }
-
-        .menu-overlay {
+        .history-panel {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.3);
-          z-index: 1000;
-          opacity: ${isMenuOpen ? 1 : 0};
-          visibility: ${isMenuOpen ? "visible" : "hidden"};
-          transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .menu {
-          position: fixed;
-          left: 0;
-          top: 0;
-          height: 100%;
           width: 250px;
-          background: #f9f9f9;
-          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-          z-index: 1001;
-          transform: ${isMenuOpen ? "translateX(0)" : "translateX(-100%)"};
+          height: 100%;
+          background: #2a2a2a;
+          transform: ${isHistoryOpen ? "translateX(0)" : "translateX(-100%)"};
           transition: transform 0.3s ease;
           padding: 20px;
           box-sizing: border-box;
           overflow-y: auto;
+          z-index: 1001;
         }
 
-        .menu-header {
+        .history-panel-header {
           display: flex;
-          justify-content: flex-end;
           align-items: center;
-          margin-bottom: 10px;
+          gap: 10px;
+          margin-bottom: 20px;
         }
 
-        .close-menu {
+        .back-button {
           padding: 8px;
-          background: #000;
-          color: #fff;
+          background: none;
           border: none;
-          border-radius: 20px;
-          font-size: 14px;
-          text-align: center;
-          text-decoration: none;
+          color: #e7cf2c;
           cursor: pointer;
-          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          transition: background 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: color 0.2s;
         }
 
-        .close-menu:hover {
-          background: #e7cf2c;
-          color: #000;
-          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        .back-button:hover {
+          color: #fff;
         }
 
-        .close-menu svg {
-          width: 14px;
-          height: 14px;
+        .back-button svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .history-panel-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #fff;
         }
 
         .recent-searches {
           margin-top: 0;
-          margin-bottom: 0;
-        }
-
-        .recent-searches-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           margin-bottom: 10px;
         }
 
-        .recent-searches-title {
+        .recent-search-item {
+          padding: 8px;
+          background: #3a3a3a;
+          border-radius: 4px;
+          margin-bottom: 5px;
+          cursor: pointer;
           font-size: 14px;
-          font-weight: bold;
-          color: #333;
+          color: #fff;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .recent-search-item:hover {
+          background: #4a4a4a;
         }
 
         .clear-history {
-          padding: 8px 16px;
-          background: #000;
-          color: #fff;
+          padding: 6px 12px;
+          background: #e7cf2c;
+          color: #000;
           border: none;
           border-radius: 20px;
           font-size: 14px;
@@ -865,27 +817,14 @@ export default function SearchForm() {
         }
 
         .clear-history:hover {
-          background: #e7cf2c;
-          color: #000;
+          background: #d4bc25;
           box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
-        .recent-search-item {
-          padding: 8px;
-          background: #fff;
-          border: 1px solid #eee;
-          border-radius: 4px;
-          margin-bottom: 5px;
-          cursor: pointer;
+        .no-recent-searches {
           font-size: 14px;
-          color: #333;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .recent-search-item:hover {
-          background: #f0f0f0;
+          color: #aaa;
+          text-align: center;
         }
 
         .results-container {
@@ -1316,6 +1255,7 @@ export default function SearchForm() {
         @media (max-width: 850px) {
           .container {
             padding: 15px;
+            padding-top: 50px; /* Adjust for smaller menu button on mobile */
           }
 
           .header img {
@@ -1367,44 +1307,41 @@ export default function SearchForm() {
             font-size: 18px;
           }
 
-          .menu-button {
-            top: 15px;
-            left: 15px;
-            padding: 6px;
-          }
-
-          .menu-button svg {
-            width: 16px;
-            height: 16px;
-          }
-
-          .menu {
-            width: 80%; /* Larger width on mobile for usability */
+          .history-panel {
+            width: 80%;
             max-width: 200px;
           }
 
-          .close-menu {
+          .history-panel-header {
+            margin-bottom: 15px;
+          }
+
+          .history-panel-title {
+            font-size: 14px;
+          }
+
+          .back-button {
             padding: 6px;
           }
 
-          .close-menu svg {
-            width: 12px;
-            height: 12px;
-          }
-
-          .recent-searches-title {
-            font-size: 12px;
-          }
-
-          .clear-history {
-            padding: 6px 12px;
-            font-size: 12px;
+          .back-button svg {
+            width: 14px;
+            height: 14px;
           }
 
           .recent-search-item {
             padding: 6px;
             font-size: 12px;
             margin-bottom: 4px;
+          }
+
+          .clear-history {
+            padding: 4px 10px;
+            font-size: 12px;
+          }
+
+          .no-recent-searches {
+            font-size: 12px;
           }
 
           .loading-bar-container {
@@ -1600,120 +1537,30 @@ export default function SearchForm() {
         }
       `}</style>
 
-      <div className="container">
-        {recentSearches.length > 0 && (
-          <button className="menu-button" onClick={toggleMenu}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-        )}
-
-        <div className="header">
-          <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} />
-        </div>
-
-        <div className="search-container">
-          <div className="input-wrapper">
-            <form onSubmit={handleFormSubmit} action="#">
-              <input
-                type="search"
-                id="query"
-                value={query}
-                onChange={handleQueryChange}
-                onKeyDown={handleKeyDown}
-                className={`search-input ${query ? "has-text" : ""}`}
-                placeholder="search the matrix"
-                autoComplete="off"
-                autoCorrect="on"
-                autoCapitalize="on"
-              />
-              {showClearIcon && (
-                <button
-                  type="button"
-                  className="clear-icon"
-                  onClick={handleClearResults}
-                  aria-label="Clear search"
-                >
-                  x
-                </button>
-              )}
-              <div className="search-icon-container">
-                {query && <div className="search-icon-square"></div>}
-                <button
-                  type="submit"
-                  className="search-icon"
-                  onClick={handleMagnifyingGlassClick}
-                  disabled={!query}
-                  aria-label="Search"
-                >
-                  🔍
-                </button>
-              </div>
-            </form>
-            {isLoading && (
-              <div className="loading-bar-container">
-                <div className="loading-bar"></div>
-              </div>
-            )}
-            {showSuggestions && (
-              <div className="suggestions">
-                {suggestions.map((suggestion, index) => (
-                  <div
-                    key={index}
-                    className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
-            )}
+      {recentSearches.length > 0 && (
+        <div className="history-panel">
+          <div className="history-panel-header">
+            <button className="back-button" onClick={toggleHistory}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+            <div className="history-panel-title">Recent Searches</div>
           </div>
-        </div>
-
-        {/* Menu for Recent Searches */}
-        {recentSearches.length > 0 && (
-          <>
-            <div className="menu-overlay" onClick={toggleMenu}></div>
-            <div className="menu">
-              <div className="menu-header">
-                <button className="close-menu" onClick={toggleMenu}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
+          {recentSearches.length > 0 ? (
+            <>
               <div className="recent-searches">
-                <div className="recent-searches-header">
-                  <div className="recent-searches-title">Recent Searches</div>
-                  <button className="clear-history" onClick={handleClearHistory}>
-                    Clear History
-                  </button>
-                </div>
                 {recentSearches.map((search, index) => (
                   <div
                     key={index}
@@ -1724,206 +1571,294 @@ export default function SearchForm() {
                   </div>
                 ))}
               </div>
-            </div>
-          </>
-        )}
-
-        <div className="search-buttons">
-          <button
-            onClick={() => handleSearch(query)}
-            className={`search-button ${!query ? "button-disabled" : ""}`}
-            disabled={!query}
-          >
-            Fork It
-          </button>
+              <button className="clear-history" onClick={handleClearHistory}>
+                Clear History
+              </button>
+            </>
+          ) : (
+            <div className="no-recent-searches">No recent searches</div>
+          )}
         </div>
+      )}
 
-        {error && <div className="error-message">{error}</div>}
-        {grokResult && (
-          <>
-            <div className="results-header">
-              <div className="results-header-text">Grok Results</div>
-              <div className="action-buttons">
-                <div className="action-button" onClick={handleCopy}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  {isCopied ? "Copied!" : "Copy"}
-                </div>
-                <div className="action-button" onClick={handleShare}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                  </svg>
-                  {shareMessage || "Share"}
-                </div>
-                <div className="action-button" onClick={() => setShowRefineModal(true)}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                  Refine
-                </div>
-                <div className="action-button" onClick={handleClearResults}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                  </svg>
-                  Clear
-                </div>
-              </div>
+      <div className="header">
+        <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} />
+      </div>
+
+      <div className="search-container">
+        <div className="input-wrapper">
+          <form onSubmit={handleFormSubmit} action="#">
+            <input
+              type="search"
+              id="query"
+              value={query}
+              onChange={handleQueryChange}
+              onKeyDown={handleKeyDown}
+              className={`search-input ${query ? "has-text" : ""}`}
+              placeholder="search the matrix"
+              autoComplete="off"
+              autoCorrect="on"
+              autoCapitalize="on"
+            />
+            {showClearIcon && (
+              <button
+                type="button"
+                className="clear-icon"
+                onClick={handleClearResults}
+                aria-label="Clear search"
+              >
+                x
+              </button>
+            )}
+            <div className="search-icon-container">
+              {query && <div className="search-icon-square"></div>}
+              <button
+                type="submit"
+                className="search-icon"
+                onClick={handleMagnifyingGlassClick}
+                disabled={!query}
+                aria-label="Search"
+              >
+                🔍
+              </button>
             </div>
-            <div
-              className="results-container"
-              style={viewMode === "raw" ? { whiteSpace: "pre-wrap" } : {}}
-            >
-              {viewMode === "rendered" ? (
-                <div dangerouslySetInnerHTML={renderMarkdown(grokResult)} />
-              ) : (
-                <pre>{grokResult}</pre>
+          </form>
+          {isLoading && (
+            <div className="loading-bar-container">
+              <div className="loading-bar"></div>
+            </div>
+          )}
+          {showSuggestions && (
+            <div className="suggestions">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className={`suggestion-item ${index === highlightedIndex ? "suggestion-item-highlighted" : ""}`}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="search-buttons">
+        <button
+          onClick={() => handleSearch(query)}
+          className={`search-button ${!query ? "button-disabled" : ""}`}
+          disabled={!query}
+        >
+          Fork It
+        </button>
+      </div>
+
+      {error && <div className="error-message">{error}</div>}
+      {grokResult && (
+        <>
+          <div className="results-header">
+            <div className="results-header-text">Grok Results</div>
+            <div className="action-buttons">
+              <div className="action-button" onClick={handleCopy}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                {isCopied ? "Copied!" : "Copy"}
+              </div>
+              <div className="action-button" onClick={handleShare}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                {shareMessage || "Share"}
+              </div>
+              <div className="action-button" onClick={() => setShowRefineModal(true)}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Refine
+              </div>
+              <div className="action-button" onClick={handleClearResults}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                Clear
+              </div>
+              {recentSearches.length > 0 && (
+                <div className="action-button" onClick={toggleHistory}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2a10 10 0 0 0-7.68 16.61M12 6v6l4 2"></path>
+                    <path d="M21 16v5h-5"></path>
+                    <path d="M21 21L9 9"></path>
+                  </svg>
+                  History
+                </div>
               )}
             </div>
-            {braveResults.length > 0 && (
-              <>
-                <div className="url-results-header">Web Results</div>
-                <div className="url-results-container" ref={containerRef}>
-                  {braveResults.map((result, index) => (
-                    <div key={`${result.url}-${index}`} className="url-result-item">
-                      <a
-                        href={result.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="url-result-title"
-                      >
-                        {result.title}
-                      </a>
-                      <div className="url-result-url">{result.url}</div>
-                      <div className="url-result-description">{result.description}</div>
-                    </div>
-                  ))}
-                  <div className="loading-more" ref={loadMoreRef}>
-                    {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
-                  </div>
-                </div>
-              </>
-            )}
-            <div className="feedback-section">
-              <span
-                className="feedback-button"
-                onClick={() => handleFeedback("up")}
-                role="img"
-                aria-label="Thumbs Up"
-              >
-                👍
-              </span>
-              <span
-                className="feedback-button"
-                onClick={() => handleFeedback("down")}
-                role="img"
-                aria-label="Thumbs Down"
-              >
-                👎
-              </span>
-              {feedbackMessage && <span className="feedback-message">{feedbackMessage}</span>}
-            </div>
-            <div className="ad-container">
-              <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
-            </div>
-          </>
-        )}
-
-        {showRefineModal && (
-          <div className="modal">
-            <div className="modal-content">
-              <div className="modal-title">Refine Your Result</div>
-              <div className="refine-modal-input-container">
-                <input
-                  type="text"
-                  className="refine-modal-input"
-                  value={refineInput}
-                  onChange={(e) => setRefineInput(e.target.value)}
-                  placeholder="Enter refinement instruction"
-                />
-              </div>
-              <div className="modal-buttons">
-                <button onClick={handleRefineSubmit} className="modal-button">
-                  Submit
-                </button>
-                <button onClick={closeRefineModal} className="modal-button">
-                  Cancel
-                </button>
-              </div>
-            </div>
           </div>
-        )}
-
-        <div className="download-section">
-          <div className="download-text">Get the Fork in Road Safari extension.</div>
-          <a
-            href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="download-button"
+          <div
+            className="results-container"
+            style={viewMode === "raw" ? { whiteSpace: "pre-wrap" } : {}}
           >
-            <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
-          </a>
-          <div className="powered-by">
-            Powered by{" "}
-            <a href="https://x.ai" target="_blank" rel="noopener noreferrer">
-              Grok
-            </a>{" "}
-            and{" "}
-            <a href="https://brave.com" target="_blank" rel="noopener noreferrer">
-              Brave
-            </a>
+            {viewMode === "rendered" ? (
+              <div dangerouslySetInnerHTML={renderMarkdown(grokResult)} />
+            ) : (
+              <pre>{grokResult}</pre>
+            )}
           </div>
+          {braveResults.length > 0 && (
+            <>
+              <div className="url-results-header">Web Results</div>
+              <div className="url-results-container" ref={containerRef}>
+                {braveResults.map((result, index) => (
+                  <div key={`${result.url}-${index}`} className="url-result-item">
+                    <a
+                      href={result.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="url-result-title"
+                    >
+                      {result.title}
+                    </a>
+                    <div className="url-result-url">{result.url}</div>
+                    <div className="url-result-description">{result.description}</div>
+                  </div>
+                ))}
+                <div className="loading-more" ref={loadMoreRef}>
+                  {isLoadingMore ? "Loading more..." : hasMore ? "Scroll to load more..." : "No more results"}
+                </div>
+              </div>
+            </>
+          )}
+          <div className="feedback-section">
+            <span
+              className="feedback-button"
+              onClick={() => handleFeedback("up")}
+              role="img"
+              aria-label="Thumbs Up"
+            >
+              👍
+            </span>
+            <span
+              className="feedback-button"
+              onClick={() => handleFeedback("down")}
+              role="img"
+              aria-label="Thumbs Down"
+            >
+              👎
+            </span>
+            {feedbackMessage && <span className="feedback-message">{feedbackMessage}</span>}
+          </div>
+          <div className="ad-container">
+            <div className="ad-placeholder">Sponsored Ad Placeholder (Carbon Ads)</div>
+          </div>
+        </>
+      )}
+
+      {showRefineModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-title">Refine Your Result</div>
+            <div className="refine-modal-input-container">
+              <input
+                type="text"
+                className="refine-modal-input"
+                value={refineInput}
+                onChange={(e) => setRefineInput(e.target.value)}
+                placeholder="Enter refinement instruction"
+              />
+            </div>
+            <div className="modal-buttons">
+              <button onClick={handleRefineSubmit} className="modal-button">
+                Submit
+              </button>
+              <button onClick={closeRefineModal} className="modal-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="download-section">
+        <div className="download-text">Get the Fork in Road Safari extension.</div>
+        <a
+          href="https://apps.apple.com/us/app/fork-in-road/id6742797455"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="download-button"
+        >
+          <Image src="/black.svg" alt="Download Fork in Road Extension" width={150} height={33} />
+        </a>
+        <div className="powered-by">
+          Powered by{" "}
+          <a href="https://x.ai" target="_blank" rel="noopener noreferrer">
+            Grok
+          </a>{" "}
+          and{" "}
+          <a href="https://brave.com" target="_blank" rel="noopener noreferrer">
+            Brave
+          </a>
         </div>
       </div>
     </div>
