@@ -1,5 +1,5 @@
 import { streamText } from 'ai';
-import { xAI } from '@ai-sdk/xai'; // Import xAI provider from @ai-sdk/xai
+import { xai } from '@ai-sdk/xai'; // Corrected import: xai (lowercase) instead of xAI
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
   try {
     const stream = await streamText({
-      model: xAI('grok'), // Use xAI provider to create Grok model
+      model: xai('grok'), // Use xai provider to create Grok model
       messages,
     });
 
