@@ -1,6 +1,6 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
+import { useChat } from 'ai/react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { marked } from 'marked';
@@ -12,12 +12,13 @@ marked.setOptions({
 });
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, reload } = useChat({
     api: '/api/chat',
   });
 
   const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputSectionRef = useRef<HTMLDivElement>(null);
 
   // Ensure the component is mounted on the client
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  // Prevent zoom on touch for the chat input
+  // Prevent zoom on touch and focus for the chat input
   useEffect(() => {
     const preventZoom = (e: TouchEvent) => {
       if (e.touches.length > 1) {
@@ -39,19 +40,58 @@ export default function ChatPage() {
       }
     };
 
+    const preventZoomOnFocus = (e: FocusEvent) => {
+      e.preventDefault();
+      // Ensure the viewport scale remains 1
+      document.querySelector('meta[name="viewport"]')?.setAttribute(
+        'content',
+        'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no'
+      );
+    };
+
     const input = document.getElementById("chat-input");
     if (input) {
       input.addEventListener("touchstart", preventZoom, { passive: false });
       input.addEventListener("touchmove", preventZoom, { passive: false });
+      input.addEventListener("focus", preventZoomOnFocus);
     }
 
     return () => {
       if (input) {
         input.removeEventListener("touchstart", preventZoom);
         input.removeEventListener("touchmove", preventZoom);
+        input.removeEventListener("focus", preventZoomOnFocus);
       }
     };
   }, []);
+
+  // Adjust input section position when the keyboard appears on mobile
+  useEffect(() => {
+    const handleViewportChange = () => {
+      if (inputSectionRef.current && window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const offset = window.innerHeight - viewportHeight;
+        // Adjust the bottom padding based on the keyboard height
+        inputSectionRef.current.style.bottom = `${offset}px`;
+      }
+    };
+
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      };
+    }
+  }, []);
+
+  // Reset chat by reloading the chat session
+  const resetChat = () => {
+    // Since useChat doesn't provide a direct way to clear messages,
+    // we can use the reload function to start a new session
+    reload();
+    // Optionally clear the input
+    handleInputChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
+  };
 
   if (!isMounted) {
     return null; // Avoid rendering on the server to prevent hydration issues
@@ -83,13 +123,14 @@ export default function ChatPage() {
           margin: 0 auto;
           padding: 20px;
           padding-top: 60px; /* Add padding to account for the menu button in the layout */
+          padding-bottom: 120px; /* Add padding to prevent overlap with input section */
           background: #fff;
           border-radius: 10px;
-          min-height: 80vh; /* Ensure it takes at least 80vh */
+          min-height: 80vh;
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
-          position: relative; /* Ensure positioning context for sticky input */
+          position: relative;
         }
 
         .header {
@@ -222,11 +263,16 @@ export default function ChatPage() {
         }
 
         .input-section {
-          position: sticky;
+          position: fixed;
           bottom: 0;
+          left: 0;
+          right: 0;
+          max-width: 850px;
+          margin: 0 auto;
           background: #fff;
-          padding: 10px 0;
+          padding: 10px 20px;
           z-index: 100;
+          box-sizing: border-box;
         }
 
         .prompt-starters {
@@ -236,12 +282,12 @@ export default function ChatPage() {
           padding: 10px 0;
           margin-bottom: 10px;
           -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
         }
 
         .prompt-starters::-webkit-scrollbar {
-          display: none;
+          display: none; /* Chrome, Safari, and Opera */
         }
 
         .prompt-starter {
@@ -261,24 +307,25 @@ export default function ChatPage() {
         }
 
         .input-container {
+          position: relative;
           display: flex;
           align-items: center;
-          position: relative;
+          gap: 10px;
         }
 
         .chat-input {
           flex: 1;
-          padding: 10px 40px 10px 10px;
+          padding: 10px 80px 10px 10px; /* Increased padding-right to account for send and reset buttons */
           border: 1px solid #ccc;
           border-radius: 20px;
-          font-size: 16px !important;
-          width: 100%;
-          max-width: 100%;
+          font-size: 16px !important; /* Lock font size to prevent zoom */
+          width: 100%; /* Lock width */
+          max-width: 100%; /* Prevent overflow */
           box-sizing: border-box;
           background: #fff;
           transition: border-color 0.3s ease;
-          touch-action: manipulation;
-          -webkit-appearance: none;
+          touch-action: manipulation; /* Prevent zoom on touch */
+          -webkit-appearance: none; /* Remove default iOS styling */
           appearance: none;
         }
 
@@ -288,7 +335,7 @@ export default function ChatPage() {
 
         .send-button {
           position: absolute;
-          right: 5px;
+          right: 40px; /* Position to the left of the reset button */
           top: 50%;
           transform: translateY(-50%);
           padding: 6px;
@@ -316,10 +363,35 @@ export default function ChatPage() {
           cursor: not-allowed;
         }
 
+        .reset-button {
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          padding: 6px;
+          background: #000;
+          color: #fff;
+          border: none;
+          border-radius: 50%;
+          font-size: 14px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          transition: background 0.3s ease;
+        }
+
+        .reset-button:hover {
+          background: #333;
+        }
+
         @media (max-width: 850px) {
           .chat-container {
             padding: 15px;
             padding-top: 50px;
+            padding-bottom: 100px; /* Adjust for smaller screen */
             min-height: 85vh;
           }
 
@@ -378,7 +450,7 @@ export default function ChatPage() {
           }
 
           .input-section {
-            padding: 8px 0;
+            padding: 8px 15px;
           }
 
           .prompt-starters {
@@ -393,18 +465,30 @@ export default function ChatPage() {
           }
 
           .chat-input {
-            padding: 8px 35px 8px 8px;
+            padding: 8px 70px 8px 8px; /* Adjusted padding-right for mobile */
             font-size: 16px !important;
           }
 
           .send-button {
-            right: 4px;
+            right: 35px;
             width: 26px;
             height: 26px;
             font-size: 12px;
           }
 
           .send-button svg {
+            width: 14px;
+            height: 14px;
+          }
+
+          .reset-button {
+            right: 4px;
+            width: 26px;
+            height: 26px;
+            font-size: 12px;
+          }
+
+          .reset-button svg {
             width: 14px;
             height: 14px;
           }
@@ -430,7 +514,7 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="input-section">
+      <div className="input-section" ref={inputSectionRef}>
         <div className="prompt-starters">
           {["Write an email", "Identify product brands", "Find a better word", "Research a purchase"].map((prompt, index) => (
             <div
@@ -443,7 +527,7 @@ export default function ChatPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="input-container">
+        <div className="input-container">
           <input
             id="chat-input"
             type="text"
@@ -456,6 +540,7 @@ export default function ChatPage() {
           {input.trim() && (
             <button
               type="submit"
+              onClick={handleSubmit}
               className="send-button"
               disabled={isLoading || !input.trim()}
             >
@@ -475,7 +560,31 @@ export default function ChatPage() {
               </svg>
             </button>
           )}
-        </form>
+          {messages.length > 0 && (
+            <button
+              onClick={resetChat}
+              className="reset-button"
+              title="Reset Chat"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                <path d="M8 16H3v5"></path>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
