@@ -546,8 +546,8 @@ export default function SearchForm() {
         }
 
         .header img {
-          width: 100px;
-          height: 100px;
+          width: 85px;
+          height: 85px;
           margin-bottom: 10px;
         }
 
@@ -597,6 +597,9 @@ export default function SearchForm() {
           transform: translateY(-50%);
           width: 40px;
           height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .search-icon-square {
@@ -607,14 +610,33 @@ export default function SearchForm() {
           background: #e7cf2c; /* Same color as the progress bar */
           border-top-right-radius: 20px;
           border-bottom-right-radius: 20px;
-          z-index: 0; /* Behind the icon */
+          z-index: 0; /* Behind the icons */
+        }
+
+        .clear-icon {
+          position: absolute;
+          left: 0;
+          width: 20px;
+          height: 20px;
+          color: #666;
+          background: none;
+          border: none;
+          padding: 0;
+          font-size: 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1; /* Ensure icon is above the square */
+        }
+
+        .clear-icon:hover {
+          color: #e7cf2c; /* Same color as the progress bar */
         }
 
         .search-icon {
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
+          right: 0;
           width: 20px;
           height: 20px;
           color: #666;
@@ -1291,8 +1313,8 @@ export default function SearchForm() {
           }
 
           .header img {
-            width: 80px;
-            height: 80px;
+            width: 68px;
+            height: 68px;
           }
 
           .header h1 {
@@ -1327,6 +1349,12 @@ export default function SearchForm() {
             height: 35px;
             border-top-right-radius: 20px;
             border-bottom-right-radius: 20px;
+          }
+
+          .clear-icon {
+            width: 18px;
+            height: 18px;
+            font-size: 18px;
           }
 
           .search-icon {
@@ -1593,7 +1621,7 @@ export default function SearchForm() {
         )}
 
         <div className="header">
-          <Image src="/settings512.png" alt="Fork in Road Logo" width={100} height={100} />
+          <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} />
           <h1>choose</h1>
         </div>
 
@@ -1614,6 +1642,16 @@ export default function SearchForm() {
               />
               <div className="search-icon-container">
                 {query && <div className="search-icon-square"></div>}
+                {query && (
+                  <button
+                    type="button"
+                    className="clear-icon"
+                    onClick={handleClearResults}
+                    aria-label="Clear search"
+                  >
+                    &times;
+                  </button>
+                )}
                 <button
                   type="submit"
                   className="search-icon"
