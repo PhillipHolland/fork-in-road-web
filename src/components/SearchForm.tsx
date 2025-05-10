@@ -1410,7 +1410,7 @@ export default function SearchForm() {
 
       <div className="header">
         <Image src="/settings512.png" alt="Fork in Road Logo" width={100} height={100} />
-        <h1>choose your path</h1>
+        <h1>choose</h1> {/* Updated from "choose your path" to "choose" */}
       </div>
 
       <div className="search-container">
