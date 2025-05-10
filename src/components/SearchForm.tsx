@@ -597,25 +597,11 @@ export default function SearchForm() {
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 1; /* Ensure icon is above the square */
         }
 
+        .search-icon.active,
         .search-icon:hover {
-          color: #e7cf2c;
-        }
-
-        /* Add the colored square around the magnifying glass when active */
-        .search-icon-wrapper.active::before {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 24px;
-          height: 24px;
-          background: #e7cf2c; /* Same color as the progress bar */
-          border-radius: 4px;
-          z-index: 0; /* Behind the icon */
+          color: #e7cf2c; /* Same color as the progress bar */
         }
 
         .loading-bar-container {
@@ -1312,11 +1298,6 @@ export default function SearchForm() {
             font-size: 18px;
           }
 
-          .search-icon-wrapper.active::before {
-            width: 22px;
-            height: 22px;
-          }
-
           .history-button {
             padding: 8px 15px;
             font-size: 14px;
@@ -1593,9 +1574,9 @@ export default function SearchForm() {
               autoCorrect="on"
               autoCapitalize="on"
             />
-            <div className={`search-icon-wrapper ${query ? "active" : ""}`}>
+            <div className="search-icon-wrapper">
               <button
-                className="search-icon"
+                className={`search-icon ${query ? "active" : ""}`}
                 onClick={handleMagnifyingGlassClick}
                 disabled={!query}
                 aria-label="Search"
