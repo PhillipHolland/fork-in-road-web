@@ -322,6 +322,18 @@ export default function SearchForm() {
     }
   };
 
+  // Handle form submission (triggered by the "Search" key on iOS keyboard)
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (query) {
+      handleSearch(query);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setHighlightedIndex(-1);
+      setSelectedSuggestion(query);
+    }
+  };
+
   // Handle refine submit
   const handleRefineSubmit = () => {
     if (refineInput.trim()) {
@@ -1587,29 +1599,32 @@ export default function SearchForm() {
 
         <div className="search-container">
           <div className="input-wrapper">
-            <input
-              type="text"
-              id="query"
-              value={query}
-              onChange={handleQueryChange}
-              onKeyDown={handleKeyDown}
-              className={`search-input ${query ? "has-text" : ""}`}
-              placeholder="search"
-              autoComplete="off"
-              autoCorrect="on"
-              autoCapitalize="on"
-            />
-            <div className="search-icon-container">
-              {query && <div className="search-icon-square"></div>}
-              <button
-                className="search-icon"
-                onClick={handleMagnifyingGlassClick}
-                disabled={!query}
-                aria-label="Search"
-              >
-                🔍
-              </button>
-            </div>
+            <form onSubmit={handleFormSubmit} action="#">
+              <input
+                type="search"
+                id="query"
+                value={query}
+                onChange={handleQueryChange}
+                onKeyDown={handleKeyDown}
+                className={`search-input ${query ? "has-text" : ""}`}
+                placeholder="search"
+                autoComplete="off"
+                autoCorrect="on"
+                autoCapitalize="on"
+              />
+              <div className="search-icon-container">
+                {query && <div className="search-icon-square"></div>}
+                <button
+                  type="submit"
+                  className="search-icon"
+                  onClick={handleMagnifyingGlassClick}
+                  disabled={!query}
+                  aria-label="Search"
+                >
+                  🔍
+                </button>
+              </div>
+            </form>
             {isLoading && (
               <div className="loading-bar-container">
                 <div className="loading-bar"></div>
