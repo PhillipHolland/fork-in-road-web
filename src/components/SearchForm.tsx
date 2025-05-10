@@ -539,7 +539,7 @@ export default function SearchForm() {
         }
 
         .header {
-          margin-bottom: 20px;
+          margin-bottom: 15px; /* Reduced from 20px to close the gap */
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -571,7 +571,7 @@ export default function SearchForm() {
 
         .search-input {
           width: 100%;
-          padding: 10px 40px 10px 10px;
+          padding: 10px 60px 10px 10px; /* Increased padding-right to accommodate the "x" button */
           border: 1px solid #ccc;
           border-radius: 20px;
           font-size: 16px;
@@ -592,7 +592,7 @@ export default function SearchForm() {
 
         .search-icon-container {
           position: absolute;
-          right: 0;
+          right: 15px;
           top: 50%;
           transform: translateY(-50%);
           width: 40px;
@@ -615,7 +615,9 @@ export default function SearchForm() {
 
         .clear-icon {
           position: absolute;
-          left: 0;
+          right: 40px; /* Position to the left of the search-icon-container */
+          top: 50%;
+          transform: translateY(-50%);
           width: 20px;
           height: 20px;
           color: #666;
@@ -627,7 +629,7 @@ export default function SearchForm() {
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 1; /* Ensure icon is above the square */
+          z-index: 1; /* Ensure icon is above the input background */
         }
 
         .clear-icon:hover {
@@ -636,7 +638,9 @@ export default function SearchForm() {
 
         .search-icon {
           position: absolute;
-          right: 0;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           width: 20px;
           height: 20px;
           color: #666;
@@ -1334,12 +1338,13 @@ export default function SearchForm() {
 
           .search-input {
             width: 100%;
-            padding: 8px 35px 8px 8px;
+            padding: 8px 55px 8px 8px; /* Increased padding-right for mobile */
             font-size: 16px;
             touch-action: pan-y;
           }
 
           .search-icon-container {
+            right: 12px;
             width: 35px;
             height: 35px;
           }
@@ -1352,6 +1357,7 @@ export default function SearchForm() {
           }
 
           .clear-icon {
+            right: 35px; /* Position to the left of the search-icon-container on mobile */
             width: 18px;
             height: 18px;
             font-size: 18px;
@@ -1640,18 +1646,18 @@ export default function SearchForm() {
                 autoCorrect="on"
                 autoCapitalize="on"
               />
+              {query && (
+                <button
+                  type="button"
+                  className="clear-icon"
+                  onClick={handleClearResults}
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
               <div className="search-icon-container">
                 {query && <div className="search-icon-square"></div>}
-                {query && (
-                  <button
-                    type="button"
-                    className="clear-icon"
-                    onClick={handleClearResults}
-                    aria-label="Clear search"
-                  >
-                    &times;
-                  </button>
-                )}
                 <button
                   type="submit"
                   className="search-icon"
