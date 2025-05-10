@@ -1,13 +1,12 @@
-import { streamText } from 'ai'; // Use the main 'ai' package
+import { streamText, xAI } from 'ai'; // Import xAI provider from ai package
 import { NextResponse } from 'next/server';
 
-// Assuming Grok is the model, configure it here
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
   try {
     const stream = await streamText({
-      model: 'grok', // Adjust based on your actual model provider and name
+      model: xAI('grok'), // Use xAI provider to create Grok model
       messages,
     });
 

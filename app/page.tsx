@@ -1,6 +1,6 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react'; // Updated import to match package structure
+import { useChat } from '@ai-sdk/react'; // Correct import
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { marked } from 'marked';
