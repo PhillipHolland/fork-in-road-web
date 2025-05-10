@@ -37,7 +37,6 @@ export default function ChatPage() {
           background: #fff;
           border-radius: 10px;
           box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
           height: 80vh;
           display: flex;
           flex-direction: column;
