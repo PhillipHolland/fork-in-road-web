@@ -30,6 +30,22 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         </svg>
       </button>
 
+      <Link href="/chat" className="chat-button">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </Link>
+
       <div className="menu-overlay" onClick={toggleMenu}></div>
       <div className="menu">
         <div className="menu-header">
@@ -68,24 +84,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
               Home
-            </div>
-          </Link>
-          <Link href="/chat" className="menu-option-link" onClick={toggleMenu}>
-            <div className="menu-option">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              Chat
             </div>
           </Link>
         </div>
@@ -127,6 +125,38 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         }
 
         .menu-button svg {
+          width: 20px;
+          height: 20px;
+        }
+
+        .chat-button {
+          position: fixed;
+          top: 20px;
+          left: 68px; /* 20px (menu button left) + 40px (menu button width) + 8px (gap) */
+          padding: 8px;
+          background: rgba(0, 0, 0, 0.8);
+          border: 1px solid #333;
+          color: #fff;
+          border-radius: 20px;
+          font-size: 16px;
+          text-align: center;
+          text-decoration: none;
+          cursor: pointer;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1002;
+        }
+
+        .chat-button:hover {
+          background: rgba(231, 207, 44, 0.2);
+          border-color: #e7cf2c;
+          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .chat-button svg {
           width: 20px;
           height: 20px;
         }
@@ -241,6 +271,17 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           }
 
           .menu-button svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          .chat-button {
+            top: 15px;
+            left: 58px; /* 15px (menu button left) + 35px (menu button width) + 8px (gap) */
+            padding: 6px;
+          }
+
+          .chat-button svg {
             width: 16px;
             height: 16px;
           }
