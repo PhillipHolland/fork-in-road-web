@@ -122,8 +122,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
 
         .menu-button {
           position: fixed;
-          top: 20px;
-          left: 20px;
+          top: 20px !important;
+          left: 20px !important;
           padding: 10px;
           background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
@@ -140,6 +140,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           width: 44px;
           height: 44px;
           z-index: 1002;
+          border: 1px solid red; /* Debug border */
         }
 
         .menu-button:hover {
@@ -154,8 +155,9 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
 
         .action-button {
           position: fixed;
-          top: 20px;
-          right: 20px;
+          top: 20px !important;
+          right: 20px !important;
+          left: auto !important; /* Ensure no left positioning */
           padding: 10px;
           background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
@@ -172,6 +174,7 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           width: 44px;
           height: 44px;
           z-index: 1002;
+          border: 1px solid blue; /* Debug border */
         }
 
         .action-button:hover {
@@ -286,8 +289,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
 
         @media (max-width: 850px) {
           .menu-button {
-            top: 15px;
-            left: 15px;
+            top: 15px !important;
+            left: 15px !important;
             padding: 8px;
             width: 40px;
             height: 40px;
@@ -299,8 +302,9 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           }
 
           .action-button {
-            top: 15px;
-            right: 15px;
+            top: 15px !important;
+            right: 15px !important;
+            left: auto !important;
             padding: 8px;
             width: 40px;
             height: 40px;
