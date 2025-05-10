@@ -1,8 +1,8 @@
-import { createXAI } from '@ai-sdk/xai';
+import { createXai } from '@ai-sdk/xai'; // Fixed casing: createXai instead of createXAI
 import { streamText } from 'ai';
 
 // Initialize the xAI client with the Grok API
-const xai = createXAI({
+const xai = createXai({
   apiKey: process.env.XAI_API_KEY,
   baseURL: 'https://api.x.ai/v1',
 });

@@ -378,7 +378,7 @@ export default function SearchForm() {
         return nextPage;
       });
     }, 300);
-  }, [query]);
+  }, [query, fetchResults]); // Added fetchResults to dependency array
 
   // Set up Intersection Observer for infinite scroll
   const handleObserver = useCallback(
