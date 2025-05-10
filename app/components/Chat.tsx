@@ -1,61 +1,33 @@
 'use client';
 
-import { useChat } from 'ai';
-import { useState, useEffect, useRef } from 'react';
+import { defaultModel, type modelID } from "@/ai/providers";
+import { useChat } from "@ai-sdk/react";
+import { useState } from "react";
+import { Textarea } from "./textarea";
+import { ProjectOverview } from "./project-overview";
+import { Messages } from "./messages";
+import { Header } from "./header";
+import { toast } from "sonner";
 import Image from 'next/image';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-
-// Configure marked to run synchronously
-marked.setOptions({
-  async: false,
-});
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+  const [selectedModel, setSelectedModel] = useState<modelID>(defaultModel);
+  const { messages, input, handleInputChange, handleSubmit, status, stop } = useChat({
+    maxSteps: 5,
+    body: {
+      selectedModel,
+    },
+    onError: (error) => {
+      toast.error(
+        error.message.length > 0
+          ? error.message
+          : "An error occurred, please try again later.",
+        { position: "top-center", richColors: true },
+      );
+    },
   });
 
-  const [isMounted, setIsMounted] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Ensure the component is mounted on the client
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Scroll to the bottom of the messages when new messages are added
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  // Prevent zoom on touch for the chat input
-  useEffect(() => {
-    const preventZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    const input = document.getElementById("chat-input");
-    if (input) {
-      input.addEventListener("touchstart", preventZoom, { passive: false });
-      input.addEventListener("touchmove", preventZoom, { passive: false });
-    }
-
-    return () => {
-      if (input) {
-        input.removeEventListener("touchstart", preventZoom);
-        input.removeEventListener("touchmove", preventZoom);
-      }
-    };
-  }, []);
-
-  if (!isMounted) {
-    return null; // Avoid rendering on the server to prevent hydration issues
-  }
+  const isLoading = status === "streaming" || status === "submitted";
 
   const promptStarters = [
     "Write an email",
@@ -68,13 +40,6 @@ export default function Chat() {
     handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  // Convert markdown to HTML and sanitize it (synchronous)
-  const renderMarkdown = (markdown: string) => {
-    const html = marked.parse(markdown) as string;
-    const sanitizedHtml = DOMPurify.sanitize(html);
-    return { __html: sanitizedHtml };
-  };
-
   return (
     <div className="chat-container">
       <style jsx>{`
@@ -85,11 +50,11 @@ export default function Chat() {
           padding-top: 60px; /* Add padding to account for the menu button in the layout */
           background: #fff;
           border-radius: 10px;
-          min-height: 80vh; /* Ensure it takes at least 80vh */
+          min-height: 80vh;
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
-          position: relative; /* Ensure positioning context for sticky input */
+          position: relative;
         }
 
         .header {
@@ -105,7 +70,38 @@ export default function Chat() {
           margin-bottom: 10px;
         }
 
-        .messages-container {
+        .prompt-starters {
+          display: flex;
+          gap: 10px;
+          overflow-x: auto;
+          padding: 10px 0;
+          margin-bottom: 10px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .prompt-starters::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, and Opera */
+        }
+
+        .prompt-starter {
+          padding: 8px 16px;
+          background: #f0f0f0;
+          border-radius: 20px;
+          font-size: 14px;
+          color: #333;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.3s ease;
+        }
+
+        .prompt-starter:hover {
+          background: #e7cf2c;
+          color: #000;
+        }
+
+        .messages {
           flex: 1;
           overflow-y: auto;
           padding: 10px;
@@ -113,14 +109,6 @@ export default function Chat() {
           border-radius: 8px;
           margin-bottom: 20px;
           -webkit-overflow-scrolling: touch;
-        }
-
-        .message {
-          padding: 10px 15px;
-          margin-bottom: 10px;
-          border-radius: 8px;
-          max-width: 80%;
-          word-wrap: break-word;
         }
 
         .message.user {
@@ -224,43 +212,12 @@ export default function Chat() {
         .input-section {
           position: sticky;
           bottom: 0;
-          background: #fff; /* Ensure background to avoid transparency */
-          padding: 10px 0; /* Add padding for spacing */
-          z-index: 100; /* Ensure it stays above messages */
-        }
-
-        .prompt-starters {
-          display: flex;
-          gap: 10px;
-          overflow-x: auto;
+          background: #fff;
           padding: 10px 0;
-          margin-bottom: 10px;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE and Edge */
+          z-index: 100;
         }
 
-        .prompt-starters::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, and Opera */
-        }
-
-        .prompt-starter {
-          padding: 8px 16px;
-          background: #f0f0f0;
-          border-radius: 20px;
-          font-size: 14px;
-          color: #333;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.3s ease;
-        }
-
-        .prompt-starter:hover {
-          background: #e7cf2c;
-          color: #000;
-        }
-
-        .input-container {
+        .textarea-container {
           display: flex;
           align-items: center;
           gap: 10px;
@@ -269,17 +226,17 @@ export default function Chat() {
 
         .chat-input {
           flex: 1;
-          padding: 10px 40px 10px 10px; /* Adjusted padding-right to account for send button */
+          padding: 10px 40px 10px 10px;
           border: 1px solid #ccc;
           border-radius: 20px;
-          font-size: 16px !important; /* Lock font size to prevent zoom */
-          width: 100%; /* Lock width */
-          max-width: 100%; /* Prevent overflow */
+          font-size: 16px !important;
+          width: 100%;
+          max-width: 100%;
           box-sizing: border-box;
           background: #fff;
           transition: border-color 0.3s ease;
-          touch-action: manipulation; /* Prevent zoom on touch */
-          -webkit-appearance: none; /* Remove default iOS styling */
+          touch-action: manipulation;
+          -webkit-appearance: none;
           appearance: none;
         }
 
@@ -320,24 +277,18 @@ export default function Chat() {
         @media (max-width: 850px) {
           .chat-container {
             padding: 15px;
-            padding-top: 50px; /* Adjust for smaller menu button on mobile */
+            padding-top: 50px;
             min-height: 85vh;
           }
 
           .header img {
-            width: 51px; /* 25% smaller than 68px on home page */
+            width: 51px;
             height: 51px;
           }
 
-          .messages-container {
+          .messages {
             padding: 8px;
             margin-bottom: 15px;
-          }
-
-          .message {
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            max-width: 85%;
           }
 
           .message-content h1 {
@@ -394,8 +345,8 @@ export default function Chat() {
           }
 
           .chat-input {
-            padding: 8px 35px 8px 8px; /* Adjusted padding-right for mobile */
-            font-size: 16px !important; /* Ensure 16px to prevent zoom */
+            padding: 8px 35px 8px 8px;
+            font-size: 16px !important;
           }
 
           .send-button {
@@ -416,24 +367,19 @@ export default function Chat() {
         <Image src="/settings512.png" alt="Fork in Road Logo" width={64} height={64} priority />
       </div>
 
-      <div className="messages-container">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`message ${message.role === 'user' ? 'user' : 'assistant'}`}
-          >
-            <div
-              className="message-content"
-              dangerouslySetInnerHTML={renderMarkdown(message.content)}
-            />
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+      <Header />
+
+      {messages.length === 0 ? (
+        <div className="max-w-xl mx-auto w-full">
+          <ProjectOverview />
+        </div>
+      ) : (
+        <Messages messages={messages} isLoading={isLoading} status={status} className="messages" />
+      )}
 
       <div className="input-section">
         <div className="prompt-starters">
-          {["Write an email", "Identify product brands", "Find a better word", "Research a purchase"].map((prompt, index) => (
+          {promptStarters.map((prompt, index) => (
             <div
               key={index}
               className="prompt-starter"
@@ -444,15 +390,16 @@ export default function Chat() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="input-container">
-          <input
-            id="chat-input"
-            type="text"
-            value={input}
-            onChange={handleInputChange}
+        <form onSubmit={handleSubmit} className="textarea-container">
+          <Textarea
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+            handleInputChange={handleInputChange}
+            input={input}
+            isLoading={isLoading}
+            status={status}
+            stop={stop}
             className="chat-input"
-            placeholder="Chat with Grok 3"
-            disabled={isLoading}
           />
           {input.trim() && (
             <button
