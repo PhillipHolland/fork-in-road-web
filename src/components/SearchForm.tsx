@@ -599,9 +599,12 @@ export default function SearchForm() {
           justify-content: center;
         }
 
-        .search-icon.active,
         .search-icon:hover {
           color: #e7cf2c; /* Same color as the progress bar */
+        }
+
+        .search-icon.active {
+          box-shadow: 0 0 8px 2px #e7cf2c; /* Glowing effect in the same color as the progress bar */
         }
 
         .loading-bar-container {
