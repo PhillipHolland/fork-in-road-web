@@ -578,14 +578,31 @@ export default function SearchForm() {
           border-color: #e7cf2c;
         }
 
-        .search-icon-wrapper {
+        .search-icon-container {
           position: absolute;
-          right: 15px;
+          right: 0;
           top: 50%;
           transform: translateY(-50%);
+          width: 40px;
+          height: 40px;
+        }
+
+        .search-icon-square {
+          position: absolute;
+          right: 0;
+          width: 40px;
+          height: 40px;
+          background: #e7cf2c; /* Same color as the progress bar */
+          border-top-right-radius: 20px;
+          border-bottom-right-radius: 20px;
+          z-index: 0; /* Behind the icon */
         }
 
         .search-icon {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           width: 20px;
           height: 20px;
           color: #666;
@@ -602,20 +619,6 @@ export default function SearchForm() {
 
         .search-icon:hover {
           color: #e7cf2c; /* Same color as the progress bar */
-        }
-
-        /* Add the colored square behind the magnifying glass when active */
-        .search-icon-wrapper.active::before {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 28px;
-          height: 28px;
-          background: #e7cf2c; /* Same color as the progress bar */
-          border-radius: 4px;
-          z-index: 0; /* Behind the icon */
         }
 
         .loading-bar-container {
@@ -1302,19 +1305,22 @@ export default function SearchForm() {
             touch-action: pan-y;
           }
 
-          .search-icon-wrapper {
-            right: 12px;
+          .search-icon-container {
+            width: 35px;
+            height: 35px;
+          }
+
+          .search-icon-square {
+            width: 35px;
+            height: 35px;
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
           }
 
           .search-icon {
             width: 18px;
             height: 18px;
             font-size: 18px;
-          }
-
-          .search-icon-wrapper.active::before {
-            width: 26px;
-            height: 26px;
           }
 
           .history-button {
@@ -1593,7 +1599,8 @@ export default function SearchForm() {
               autoCorrect="on"
               autoCapitalize="on"
             />
-            <div className={`search-icon-wrapper ${query ? "active" : ""}`}>
+            <div className="search-icon-container">
+              {query && <div className="search-icon-square"></div>}
               <button
                 className="search-icon"
                 onClick={handleMagnifyingGlassClick}
