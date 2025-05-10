@@ -1,30 +1,20 @@
-import { streamText } from '@ai-sdk/core';
-import { xai } from '@ai-sdk/xai';
-import { NextRequest } from 'next/server';
+import { streamText } from 'ai'; // Use the main 'ai' package
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+// Assuming Grok is the model, configure it here
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
   try {
-    const { messages } = await req.json();
-
-    // Stream the response from the xAI model
     const stream = await streamText({
-      model: xai('grok'),
+      model: 'grok', // Adjust based on your actual model provider and name
       messages,
     });
 
-    // Return the streamed response
-    return new Response(stream.toReadableStream(), {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    return new NextResponse(stream.toReadableStream(), {
+      headers: { 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {
-    console.error('Error in chat API:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
