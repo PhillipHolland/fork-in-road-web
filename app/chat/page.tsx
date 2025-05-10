@@ -3,13 +3,6 @@
 import { useChat } from '@ai-sdk/react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-
-// Configure marked to run synchronously
-marked.setOptions({
-  async: false,
-});
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
@@ -57,24 +50,6 @@ export default function ChatPage() {
     return null; // Avoid rendering on the server to prevent hydration issues
   }
 
-  const promptStarters = [
-    "Write an email",
-    "Identify product brands",
-    "Find a better word",
-    "Research a purchase",
-  ];
-
-  const handlePromptClick = (prompt: string) => {
-    handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
-  };
-
-  // Convert markdown to HTML and sanitize it (synchronous)
-  const renderMarkdown = (markdown: string) => {
-    const html = marked.parse(markdown) as string;
-    const sanitizedHtml = DOMPurify.sanitize(html);
-    return { __html: sanitizedHtml };
-  };
-
   return (
     <div className="chat-container">
       <style jsx>{`
@@ -85,11 +60,11 @@ export default function ChatPage() {
           padding-top: 60px; /* Add padding to account for the menu button in the layout */
           background: #fff;
           border-radius: 10px;
-          min-height: 80vh; /* Ensure it takes at least 80vh */
+          min-height: 80vh;
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
-          position: relative; /* Ensure positioning context for sticky input */
+          position: relative;
         }
 
         .header {
@@ -136,128 +111,12 @@ export default function ChatPage() {
           margin-right: auto;
         }
 
-        .message-content h1 {
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 12px;
-          color: inherit;
-        }
-
-        .message-content h2 {
-          font-size: 18px;
-          font-weight: bold;
-          margin-bottom: 10px;
-          color: inherit;
-        }
-
-        .message-content h3 {
-          font-size: 16px;
-          font-weight: bold;
-          margin-bottom: 8px;
-          color: inherit;
-        }
-
-        .message-content p {
-          margin-bottom: 10px;
-        }
-
-        .message-content strong {
-          font-weight: bold;
-        }
-
-        .message-content em {
-          font-style: italic;
-        }
-
-        .message-content ul {
-          list-style-type: disc;
-          margin-left: 20px;
-          margin-bottom: 10px;
-        }
-
-        .message-content ol {
-          list-style-type: decimal;
-          margin-left: 20px;
-          margin-bottom: 10px;
-        }
-
-        .message-content li {
-          margin-bottom: 5px;
-        }
-
-        .message-content a {
-          color: #007bff;
-          text-decoration: underline;
-        }
-
-        .message-content a:hover {
-          color: #0056b3;
-        }
-
-        .message-content blockquote {
-          border-left: 4px solid #ccc;
-          padding-left: 10px;
-          margin: 10px 0;
-          color: #666;
-          font-style: italic;
-        }
-
-        .message-content code {
-          background: #f4f4f4;
-          padding: 2px 4px;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 13px;
-        }
-
-        .message-content pre {
-          background: #f4f4f4;
-          padding: 10px;
-          border-radius: 4px;
-          overflow-x: auto;
-          font-family: monospace;
-          font-size: 13px;
-          margin-bottom: 10px;
-          white-space: pre-wrap;
-        }
-
         .input-section {
           position: sticky;
           bottom: 0;
           background: #fff;
           padding: 10px 0;
           z-index: 100;
-        }
-
-        .prompt-starters {
-          display: flex;
-          gap: 10px;
-          overflow-x: auto;
-          padding: 10px 0;
-          margin-bottom: 10px;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .prompt-starters::-webkit-scrollbar {
-          display: none;
-        }
-
-        .prompt-starter {
-          padding: 8px 16px;
-          background: #f0f0f0;
-          border-radius: 20px;
-          font-size: 14px;
-          color: #333;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.3s ease;
-        }
-
-        .prompt-starter:hover {
-          background: #e7cf2c;
-          color: #000;
         }
 
         .input-container {
@@ -339,57 +198,8 @@ export default function ChatPage() {
             max-width: 85%;
           }
 
-          .message-content h1 {
-            font-size: 18px;
-            margin-bottom: 10px;
-          }
-
-          .message-content h2 {
-            font-size: 16px;
-            margin-bottom: 8px;
-          }
-
-          .message-content h3 {
-            font-size: 14px;
-            margin-bottom: 6px;
-          }
-
-          .message-content p {
-            margin-bottom: 8px;
-          }
-
-          .message-content ul,
-          .message-content ol {
-            margin-left: 15px;
-            margin-bottom: 8px;
-          }
-
-          .message-content li {
-            margin-bottom: 4px;
-          }
-
-          .message-content pre {
-            padding: 8px;
-            font-size: 12px;
-          }
-
-          .message-content code {
-            font-size: 12px;
-          }
-
           .input-section {
             padding: 8px 0;
-          }
-
-          .prompt-starters {
-            padding: 8px 0;
-            margin-bottom: 8px;
-            gap: 8px;
-          }
-
-          .prompt-starter {
-            padding: 6px 12px;
-            font-size: 12px;
           }
 
           .chat-input {
@@ -421,28 +231,13 @@ export default function ChatPage() {
             key={index}
             className={`message ${message.role === 'user' ? 'user' : 'assistant'}`}
           >
-            <div
-              className="message-content"
-              dangerouslySetInnerHTML={renderMarkdown(message.content)}
-            />
+            {message.content}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
       <div className="input-section">
-        <div className="prompt-starters">
-          {["Write an email", "Identify product brands", "Find a better word", "Research a purchase"].map((prompt, index) => (
-            <div
-              key={index}
-              className="prompt-starter"
-              onClick={() => handlePromptClick(prompt)}
-            >
-              {prompt}
-            </div>
-          ))}
-        </div>
-
         <form onSubmit={handleSubmit} className="input-container">
           <input
             id="chat-input"

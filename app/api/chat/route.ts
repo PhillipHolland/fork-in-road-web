@@ -1,19 +1,19 @@
-import { createXai } from '@ai-sdk/xai';
-import { streamText } from 'ai';
+import { xai } from "@ai-sdk/xai";
+import { streamText } from "ai";
 
-// Initialize the xAI client with the Grok API
-const xai = createXai({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: 'https://api.x.ai/v1',
-});
-
-export async function POST(req: Request) {
+// POST /api/chat
+export async function POST(req) {
   const { messages } = await req.json();
 
-  const response = await streamText({
-    model: xai('grok-2-1212'),
-    messages,
+  // Extract the latest user message as the prompt
+  const prompt = messages[messages.length - 1].content;
+
+  // Stream the response from xAI's Grok model
+  const result = await streamText({
+    model: xai("grok-2-1212"),
+    prompt,
   });
 
-  return response.toDataStreamResponse(); // Changed from toAIStreamResponse to toDataStreamResponse
+  // Return the streamed response to the client
+  return result.toDataStreamResponse();
 }
