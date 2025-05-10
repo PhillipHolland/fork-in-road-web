@@ -46,7 +46,7 @@ export default function SearchForm() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Replaced showHistory with isSidebarOpen
 
   // Refs for IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -332,9 +332,9 @@ export default function SearchForm() {
     }
   };
 
-  // Toggle history visibility
-  const toggleHistory = () => {
-    setShowHistory((prev) => !prev);
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
   };
 
   // Debounced fetch handler for Intersection Observer
@@ -471,6 +471,7 @@ export default function SearchForm() {
     setTotalResults(0);
     setTotalFetchedResults(0);
     setHasMore(true);
+    setIsSidebarOpen(false); // Close sidebar after selecting a recent search
   };
 
   // Clear recent searches
@@ -516,6 +517,7 @@ export default function SearchForm() {
           text-align: center;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
           box-sizing: border-box;
+          position: relative; /* For sidebar positioning */
         }
 
         @media (min-width: 850px) {
@@ -546,6 +548,9 @@ export default function SearchForm() {
         .search-container {
           position: relative;
           margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
 
         .search-input {
@@ -659,6 +664,143 @@ export default function SearchForm() {
         .suggestion-item-highlighted {
           background: #f5e050;
           color: #000;
+        }
+
+        .history-button {
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .history-button:hover {
+          background: #e7cf2c;
+          color: #000;
+          border-color: #e7cf2c;
+        }
+
+        .history-button svg {
+          width: 14px;
+          height: 14px;
+        }
+
+        .sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.3);
+          z-index: 1000;
+          opacity: ${isSidebarOpen ? 1 : 0};
+          visibility: ${isSidebarOpen ? "visible" : "hidden"};
+          transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar {
+          position: fixed;
+          right: 0;
+          top: 0;
+          height: 100%;
+          width: 250px;
+          background: #f9f9f9;
+          box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+          z-index: 1001;
+          transform: ${isSidebarOpen ? "translateX(0)" : "translateX(100%)"};
+          transition: transform 0.3s ease;
+          padding: 20px;
+          box-sizing: border-box;
+          overflow-y: auto;
+        }
+
+        .sidebar-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+
+        .sidebar-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .close-sidebar {
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+        }
+
+        .close-sidebar:hover {
+          background: #ff4d4d;
+          color: #fff;
+          border-color: #ff4d4d;
+        }
+
+        .recent-searches {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        .recent-searches-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .recent-searches-title {
+          font-size: 14px;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .clear-history {
+          padding: 4px 8px;
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #333;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s;
+        }
+
+        .clear-history:hover {
+          background: #ff4d4d;
+          color: #fff;
+          border-color: #ff4d4d;
+        }
+
+        .recent-search-item {
+          padding: 8px;
+          background: #fff;
+          border: 1px solid #eee;
+          border-radius: 4px;
+          margin-bottom: 5px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .recent-search-item:hover {
+          background: #f0f0f0;
         }
 
         .results-container {
@@ -945,86 +1087,6 @@ export default function SearchForm() {
           display: inline-block;
         }
 
-        .recent-searches {
-          margin-top: 0;
-          margin-bottom: 15px;
-          text-align: left;
-        }
-
-        .recent-searches-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
-        }
-
-        .recent-searches-title {
-          font-size: 14px;
-          font-weight: bold;
-          color: #333;
-        }
-
-        .clear-history {
-          padding: 4px 8px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #333;
-          cursor: pointer;
-          transition: background 0.2s, color 0.2s;
-        }
-
-        .clear-history:hover {
-          background: #ff4d4d;
-          color: #fff;
-          border-color: #ff4d4d;
-        }
-
-        .recent-search-item {
-          padding: 8px;
-          background: #f9f9f9;
-          border: 1px solid #eee;
-          border-radius: 4px;
-          margin-bottom: 5px;
-          cursor: pointer;
-          font-size: 14px;
-          color: #333;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .recent-search-item:hover {
-          background: #f0f0f0;
-        }
-
-        .show-history-container {
-          text-align: left;
-          margin-top: 0;
-          margin-bottom: 0;
-        }
-
-        .show-history-button {
-          padding: 4px 8px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #333;
-          cursor: pointer;
-          transition: background 0.2s, color 0.2s;
-          margin-top: 0;
-          margin-bottom: 5px;
-          display: inline-block;
-        }
-
-        .show-history-button:hover {
-          background: #e7cf2c;
-          color: #000;
-          border-color: #e7cf2c;
-        }
-
         .refine-modal-input-container {
           display: flex;
           justify-content: center;
@@ -1185,6 +1247,8 @@ export default function SearchForm() {
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 10px;
+            flex-direction: column;
+            gap: 8px;
           }
 
           .search-input {
@@ -1199,6 +1263,45 @@ export default function SearchForm() {
             height: 18px;
             right: 12px;
             font-size: 18px;
+          }
+
+          .history-button {
+            padding: 3px 6px;
+            font-size: 10px;
+          }
+
+          .history-button svg {
+            width: 12px;
+            height: 12px;
+          }
+
+          .sidebar {
+            width: 80%; /* Larger width on mobile for usability */
+            max-width: 200px;
+          }
+
+          .sidebar-title {
+            font-size: 14px;
+          }
+
+          .close-sidebar {
+            padding: 3px 6px;
+            font-size: 10px;
+          }
+
+          .recent-searches-title {
+            font-size: 12px;
+          }
+
+          .clear-history {
+            padding: 3px 6px;
+            font-size: 10px;
+          }
+
+          .recent-search-item {
+            padding: 6px;
+            font-size: 12px;
+            margin-bottom: 4px;
           }
 
           .loading-bar-container {
@@ -1338,31 +1441,6 @@ export default function SearchForm() {
             font-size: 12px;
           }
 
-          .recent-searches {
-            margin-bottom: 15px;
-          }
-
-          .recent-searches-title {
-            font-size: 12px;
-          }
-
-          .clear-history {
-            padding: 3px 6px;
-            font-size: 10px;
-          }
-
-          .recent-search-item {
-            padding: 6px;
-            font-size: 12px;
-            margin-bottom: 4px;
-          }
-
-          .show-history-button {
-            padding: 3px 6px;
-            font-size: 10px;
-            margin-bottom: 5px;
-          }
-
           .refine-modal-input-container {
             margin-bottom: 8px;
           }
@@ -1445,6 +1523,26 @@ export default function SearchForm() {
         >
           🔍
         </button>
+        {recentSearches.length > 0 && (
+          <button className="history-button" onClick={toggleSidebar}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2a10 10 0 0 0-7.68 16.61M12 6v6l4 2"></path>
+              <path d="M21 16v5h-5"></path>
+              <path d="M21 21L9 9"></path>
+            </svg>
+            History
+          </button>
+        )}
         {isLoading && (
           <div className="loading-bar-container">
             <div className="loading-bar"></div>
@@ -1465,12 +1563,17 @@ export default function SearchForm() {
         )}
       </div>
 
+      {/* Sidebar for Recent Searches */}
       {recentSearches.length > 0 && (
-        <div className="show-history-container">
-          <button className="show-history-button" onClick={toggleHistory}>
-            {showHistory ? "Hide History" : "Show History"}
-          </button>
-          {showHistory && (
+        <>
+          <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+          <div className="sidebar">
+            <div className="sidebar-header">
+              <div className="sidebar-title">Recent Searches</div>
+              <div className="close-sidebar" onClick={toggleSidebar}>
+                Close
+              </div>
+            </div>
             <div className="recent-searches">
               <div className="recent-searches-header">
                 <div className="recent-searches-title">Recent Searches</div>
@@ -1488,8 +1591,8 @@ export default function SearchForm() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
 
       <div className="search-buttons">
