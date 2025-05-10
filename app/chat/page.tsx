@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { xai } from '@ai-sdk/xai';
 
 // Configure marked to run synchronously
 marked.setOptions({
@@ -15,7 +14,6 @@ marked.setOptions({
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
-    model: xai('grok-2-1212'),
   });
 
   const [isMounted, setIsMounted] = useState(false);
