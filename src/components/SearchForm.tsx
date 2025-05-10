@@ -740,24 +740,35 @@ export default function SearchForm() {
           display: flex;
           justify-content: flex-end;
           align-items: center;
-          margin-bottom: 15px;
+          margin-bottom: 10px;
         }
 
         .close-sidebar {
-          padding: 4px 8px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #333;
+          padding: 8px 16px;
+          background: #000;
+          color: #fff;
+          border: none;
+          border-radius: 20px;
+          font-size: 14px;
+          text-align: center;
+          text-decoration: none;
           cursor: pointer;
-          transition: background 0.2s, color 0.2s;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          transition: background 0.3s, box-shadow 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
         .close-sidebar:hover {
-          background: #ff4d4d;
-          color: #fff;
-          border-color: #ff4d4d;
+          background: #e7cf2c;
+          color: #000;
+          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
+        }
+
+        .close-sidebar svg {
+          width: 14px;
+          height: 14px;
         }
 
         .recent-searches {
@@ -779,20 +790,23 @@ export default function SearchForm() {
         }
 
         .clear-history {
-          padding: 4px 8px;
-          background: #f0f0f0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #333;
+          padding: 8px 16px;
+          background: #000;
+          color: #fff;
+          border: none;
+          border-radius: 20px;
+          font-size: 14px;
+          text-align: center;
+          text-decoration: none;
           cursor: pointer;
-          transition: background 0.2s, color 0.2s;
+          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          transition: background 0.3s, box-shadow 0.3s ease;
         }
 
         .clear-history:hover {
-          background: #ff4d4d;
-          color: #fff;
-          border-color: #ff4d4d;
+          background: #e7cf2c;
+          color: #000;
+          box-shadow: 0 4px 12px rgba(32, 33, 36, 0.5);
         }
 
         .recent-search-item {
@@ -1295,8 +1309,13 @@ export default function SearchForm() {
           }
 
           .close-sidebar {
-            padding: 3px 6px;
-            font-size: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
+          }
+
+          .close-sidebar svg {
+            width: 12px;
+            height: 12px;
           }
 
           .recent-searches-title {
@@ -1304,8 +1323,8 @@ export default function SearchForm() {
           }
 
           .clear-history {
-            padding: 3px 6px;
-            font-size: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
           }
 
           .recent-search-item {
@@ -1583,16 +1602,30 @@ export default function SearchForm() {
             <div className="sidebar-overlay" onClick={toggleSidebar}></div>
             <div className="sidebar">
               <div className="sidebar-header">
-                <div className="close-sidebar" onClick={toggleSidebar}>
+                <button className="close-sidebar" onClick={toggleSidebar}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
                   Close
-                </div>
+                </button>
               </div>
               <div className="recent-searches">
                 <div className="recent-searches-header">
                   <div className="recent-searches-title">Recent Searches</div>
-                  <div className="clear-history" onClick={handleClearHistory}>
+                  <button className="clear-history" onClick={handleClearHistory}>
                     Clear History
-                  </div>
+                  </button>
                 </div>
                 {recentSearches.map((search, index) => (
                   <div
