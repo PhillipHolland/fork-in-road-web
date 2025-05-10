@@ -307,7 +307,7 @@ export default function SearchForm() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [refineInput, originalQuery, grokResult, resultsPerPage, maxTotalResults]);
+  }, [refineInput, originalQuery, grokResult, resultsPerPage, maxTotalResults, totalFetchedResults]); // Added totalFetchedResults to dependency array
 
   // Handle search (used by both button click, Enter key, magnifying glass click, and autocomplete selection)
   const handleSearch = (q: string) => {
