@@ -1,9 +1,15 @@
 'use client';
 
-import { useChat } from 'ai/react';
+import { useChat } from 'ai';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Chat, ChatMessage, ChatInput } from '@vercel/ai-ui';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+
+// Configure marked to run synchronously
+marked.setOptions({
+  async: false,
+});
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
@@ -25,6 +31,28 @@ export default function ChatPage() {
     }
   }, [messages]);
 
+  // Prevent zoom on touch for the chat input
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const input = document.getElementById("chat-input");
+    if (input) {
+      input.addEventListener("touchstart", preventZoom, { passive: false });
+      input.addEventListener("touchmove", preventZoom, { passive: false });
+    }
+
+    return () => {
+      if (input) {
+        input.removeEventListener("touchstart", preventZoom);
+        input.removeEventListener("touchmove", preventZoom);
+      }
+    };
+  }, []);
+
   if (!isMounted) {
     return null; // Avoid rendering on the server to prevent hydration issues
   }
@@ -40,6 +68,13 @@ export default function ChatPage() {
     handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
   };
 
+  // Convert markdown to HTML and sanitize it (synchronous)
+  const renderMarkdown = (markdown: string) => {
+    const html = marked.parse(markdown) as string;
+    const sanitizedHtml = DOMPurify.sanitize(html);
+    return { __html: sanitizedHtml };
+  };
+
   return (
     <div className="chat-container">
       <style jsx>{`
@@ -50,11 +85,11 @@ export default function ChatPage() {
           padding-top: 60px; /* Add padding to account for the menu button in the layout */
           background: #fff;
           border-radius: 10px;
-          min-height: 80vh;
+          min-height: 80vh; /* Ensure it takes at least 80vh */
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
-          position: relative;
+          position: relative; /* Ensure positioning context for sticky input */
         }
 
         .header {
@@ -68,6 +103,130 @@ export default function ChatPage() {
           width: 64px; /* 25% smaller than 85px on home page */
           height: 64px;
           margin-bottom: 10px;
+        }
+
+        .messages-container {
+          flex: 1;
+          overflow-y: auto;
+          padding: 10px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .message {
+          padding: 10px 15px;
+          margin-bottom: 10px;
+          border-radius: 8px;
+          max-width: 80%;
+          word-wrap: break-word;
+        }
+
+        .message.user {
+          background: #e7cf2c;
+          color: #000;
+          margin-left: auto;
+          text-align: right;
+        }
+
+        .message.assistant {
+          background: #333;
+          color: #fff;
+          margin-right: auto;
+        }
+
+        .message-content h1 {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 12px;
+          color: inherit;
+        }
+
+        .message-content h2 {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: inherit;
+        }
+
+        .message-content h3 {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 8px;
+          color: inherit;
+        }
+
+        .message-content p {
+          margin-bottom: 10px;
+        }
+
+        .message-content strong {
+          font-weight: bold;
+        }
+
+        .message-content em {
+          font-style: italic;
+        }
+
+        .message-content ul {
+          list-style-type: disc;
+          margin-left: 20px;
+          margin-bottom: 10px;
+        }
+
+        .message-content ol {
+          list-style-type: decimal;
+          margin-left: 20px;
+          margin-bottom: 10px;
+        }
+
+        .message-content li {
+          margin-bottom: 5px;
+        }
+
+        .message-content a {
+          color: #007bff;
+          text-decoration: underline;
+        }
+
+        .message-content a:hover {
+          color: #0056b3;
+        }
+
+        .message-content blockquote {
+          border-left: 4px solid #ccc;
+          padding-left: 10px;
+          margin: 10px 0;
+          color: #666;
+          font-style: italic;
+        }
+
+        .message-content code {
+          background: #f4f4f4;
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 13px;
+        }
+
+        .message-content pre {
+          background: #f4f4f4;
+          padding: 10px;
+          border-radius: 4px;
+          overflow-x: auto;
+          font-family: monospace;
+          font-size: 13px;
+          margin-bottom: 10px;
+          white-space: pre-wrap;
+        }
+
+        .input-section {
+          position: sticky;
+          bottom: 0;
+          background: #fff; /* Ensure background to avoid transparency */
+          padding: 10px 0; /* Add padding for spacing */
+          z-index: 100; /* Ensure it stays above messages */
         }
 
         .prompt-starters {
@@ -101,142 +260,26 @@ export default function ChatPage() {
           color: #000;
         }
 
-        .chat-wrapper {
-          flex: 1;
+        .input-container {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          gap: 10px;
           position: relative;
-        }
-
-        .chat-messages {
-          flex: 1;
-          overflow-y: auto;
-          padding: 10px;
-          background: #f9f9f9;
-          border-radius: 8px;
-          margin-bottom: 20px;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        .chat-message.user {
-          background: #e7cf2c;
-          color: #000;
-          margin-left: auto;
-          text-align: right;
-        }
-
-        .chat-message.assistant {
-          background: #333;
-          color: #fff;
-          margin-right: auto;
-        }
-
-        .chat-message-content h1 {
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 12px;
-          color: inherit;
-        }
-
-        .chat-message-content h2 {
-          font-size: 18px;
-          font-weight: bold;
-          margin-bottom: 10px;
-          color: inherit;
-        }
-
-        .chat-message-content h3 {
-          font-size: 16px;
-          font-weight: bold;
-          margin-bottom: 8px;
-          color: inherit;
-        }
-
-        .chat-message-content p {
-          margin-bottom: 10px;
-        }
-
-        .chat-message-content strong {
-          font-weight: bold;
-        }
-
-        .chat-message-content em {
-          font-style: italic;
-        }
-
-        .chat-message-content ul {
-          list-style-type: disc;
-          margin-left: 20px;
-          margin-bottom: 10px;
-        }
-
-        .chat-message-content ol {
-          list-style-type: decimal;
-          margin-left: 20px;
-          margin-bottom: 10px;
-        }
-
-        .chat-message-content li {
-          margin-bottom: 5px;
-        }
-
-        .chat-message-content a {
-          color: #007bff;
-          text-decoration: underline;
-        }
-
-        .chat-message-content a:hover {
-          color: #0056b3;
-        }
-
-        .chat-message-content blockquote {
-          border-left: 4px solid #ccc;
-          padding-left: 10px;
-          margin: 10px 0;
-          color: #666;
-          font-style: italic;
-        }
-
-        .chat-message-content code {
-          background: #f4f4f4;
-          padding: 2px 4px;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 13px;
-        }
-
-        .chat-message-content pre {
-          background: #f4f4f4;
-          padding: 10px;
-          border-radius: 4px;
-          overflow-x: auto;
-          font-family: monospace;
-          font-size: 13px;
-          margin-bottom: 10px;
-          white-space: pre-wrap;
-        }
-
-        .input-section {
-          position: sticky;
-          bottom: 0;
-          background: #fff;
-          padding: 10px 0;
-          z-index: 100;
         }
 
         .chat-input {
           flex: 1;
-          padding: 10px 40px 10px 10px;
+          padding: 10px 40px 10px 10px; /* Adjusted padding-right to account for send button */
           border: 1px solid #ccc;
           border-radius: 20px;
-          font-size: 16px !important;
-          width: 100%;
-          max-width: 100%;
+          font-size: 16px !important; /* Lock font size to prevent zoom */
+          width: 100%; /* Lock width */
+          max-width: 100%; /* Prevent overflow */
           box-sizing: border-box;
           background: #fff;
           transition: border-color 0.3s ease;
-          touch-action: manipulation;
-          -webkit-appearance: none;
+          touch-action: manipulation; /* Prevent zoom on touch */
+          -webkit-appearance: none; /* Remove default iOS styling */
           appearance: none;
         }
 
@@ -277,55 +320,61 @@ export default function ChatPage() {
         @media (max-width: 850px) {
           .chat-container {
             padding: 15px;
-            padding-top: 50px;
+            padding-top: 50px; /* Adjust for smaller menu button on mobile */
             min-height: 85vh;
           }
 
           .header img {
-            width: 51px;
+            width: 51px; /* 25% smaller than 68px on home page */
             height: 51px;
           }
 
-          .chat-messages {
+          .messages-container {
             padding: 8px;
             margin-bottom: 15px;
           }
 
-          .chat-message-content h1 {
+          .message {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            max-width: 85%;
+          }
+
+          .message-content h1 {
             font-size: 18px;
             margin-bottom: 10px;
           }
 
-          .chat-message-content h2 {
+          .message-content h2 {
             font-size: 16px;
             margin-bottom: 8px;
           }
 
-          .chat-message-content h3 {
+          .message-content h3 {
             font-size: 14px;
             margin-bottom: 6px;
           }
 
-          .chat-message-content p {
+          .message-content p {
             margin-bottom: 8px;
           }
 
-          .chat-message-content ul,
-          .chat-message-content ol {
+          .message-content ul,
+          .message-content ol {
             margin-left: 15px;
             margin-bottom: 8px;
           }
 
-          .chat-message-content li {
+          .message-content li {
             margin-bottom: 4px;
           }
 
-          .chat-message-content pre {
+          .message-content pre {
             padding: 8px;
             font-size: 12px;
           }
 
-          .chat-message-content code {
+          .message-content code {
             font-size: 12px;
           }
 
@@ -345,7 +394,7 @@ export default function ChatPage() {
           }
 
           .chat-input {
-            padding: 8px 35px 8px 8px;
+            padding: 8px 35px 8px 8px; /* Adjusted padding-right for mobile */
             font-size: 16px !important; /* Ensure 16px to prevent zoom */
           }
 
@@ -367,43 +416,52 @@ export default function ChatPage() {
         <Image src="/settings512.png" alt="Fork in Road Logo" width={64} height={64} priority />
       </div>
 
-      <div className="chat-wrapper">
-        <Chat messages={messages} className="chat-messages">
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              role={message.role}
-              content={message.content}
-              className={`chat-message ${message.role}`}
+      <div className="messages-container">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`message ${message.role === 'user' ? 'user' : 'assistant'}`}
+          >
+            <div
+              className="message-content"
+              dangerouslySetInnerHTML={renderMarkdown(message.content)}
             />
-          ))}
-          <div ref={messagesEndRef} />
-        </Chat>
-
-        <div className="input-section">
-          <div className="prompt-starters">
-            {promptStarters.map((prompt, index) => (
-              <div
-                key={index}
-                className="prompt-starter"
-                onClick={() => handlePromptClick(prompt)}
-              >
-                {prompt}
-              </div>
-            ))}
           </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
 
-          <ChatInput
+      <div className="input-section">
+        <div className="prompt-starters">
+          {["Write an email", "Identify product brands", "Find a better word", "Research a purchase"].map((prompt, index) => (
+            <div
+              key={index}
+              className="prompt-starter"
+              onClick={() => handlePromptClick(prompt)}
+            >
+              {prompt}
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="input-container">
+          <input
+            id="chat-input"
+            type="text"
             value={input}
             onChange={handleInputChange}
-            onSubmit={handleSubmit}
+            className="chat-input"
             placeholder="Chat with Grok 3"
             disabled={isLoading}
-            className="chat-input"
-            submitButtonClassName="send-button"
-            submitButtonIcon={
+          />
+          {input.trim() && (
+            <button
+              type="submit"
+              className="send-button"
+              disabled={isLoading || !input.trim()}
+            >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
+                xmlns="[invalid url, do not cite]
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -416,9 +474,9 @@ export default function ChatPage() {
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
               </svg>
-            }
-          />
-        </div>
+            </button>
+          )}
+        </form>
       </div>
     </div>
   );
