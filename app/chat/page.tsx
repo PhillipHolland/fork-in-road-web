@@ -224,9 +224,9 @@ export default function ChatPage() {
         .input-section {
           position: sticky;
           bottom: 0;
-          background: #fff; /* Ensure background to avoid transparency */
-          padding: 10px 0; /* Add padding for spacing */
-          z-index: 100; /* Ensure it stays above messages */
+          background: #fff;
+          padding: 10px 0;
+          z-index: 100;
         }
 
         .prompt-starters {
@@ -236,12 +236,12 @@ export default function ChatPage() {
           padding: 10px 0;
           margin-bottom: 10px;
           -webkit-overflow-scrolling: touch;
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
 
         .prompt-starters::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, and Opera */
+          display: none;
         }
 
         .prompt-starter {
@@ -263,23 +263,22 @@ export default function ChatPage() {
         .input-container {
           display: flex;
           align-items: center;
-          gap: 10px;
           position: relative;
         }
 
         .chat-input {
           flex: 1;
-          padding: 10px 40px 10px 10px; /* Adjusted padding-right to account for send button */
+          padding: 10px 40px 10px 10px;
           border: 1px solid #ccc;
           border-radius: 20px;
-          font-size: 16px !important; /* Lock font size to prevent zoom */
-          width: 100%; /* Lock width */
-          max-width: 100%; /* Prevent overflow */
+          font-size: 16px !important;
+          width: 100%;
+          max-width: 100%;
           box-sizing: border-box;
           background: #fff;
           transition: border-color 0.3s ease;
-          touch-action: manipulation; /* Prevent zoom on touch */
-          -webkit-appearance: none; /* Remove default iOS styling */
+          touch-action: manipulation;
+          -webkit-appearance: none;
           appearance: none;
         }
 
@@ -320,12 +319,12 @@ export default function ChatPage() {
         @media (max-width: 850px) {
           .chat-container {
             padding: 15px;
-            padding-top: 50px; /* Adjust for smaller menu button on mobile */
+            padding-top: 50px;
             min-height: 85vh;
           }
 
           .header img {
-            width: 51px; /* 25% smaller than 68px on home page */
+            width: 51px;
             height: 51px;
           }
 
@@ -394,8 +393,8 @@ export default function ChatPage() {
           }
 
           .chat-input {
-            padding: 8px 35px 8px 8px; /* Adjusted padding-right for mobile */
-            font-size: 16px !important; /* Ensure 16px to prevent zoom */
+            padding: 8px 35px 8px 8px;
+            font-size: 16px !important;
           }
 
           .send-button {
@@ -461,7 +460,7 @@ export default function ChatPage() {
               disabled={isLoading || !input.trim()}
             >
               <svg
-                xmlns="[invalid url, do not cite]
+                xmlns="http://www.w3.org/2000/svg"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
