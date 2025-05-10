@@ -17,8 +17,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
   const IconSVG = isChatPage ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -32,8 +32,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
   ) : (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -51,8 +51,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         <button className="menu-button" onClick={toggleMenu}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -127,27 +127,28 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           top: 20px;
           left: 20px;
           display: flex;
-          gap: 8px;
+          align-items: center;
+          gap: 12px;
           z-index: 1002;
         }
 
         .menu-button {
-          padding: 8px;
-          background: rgba(0, 0, 0, 0.8);
+          padding: 10px;
+          background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
           color: #fff;
-          border-radius: 20px;
+          border-radius: 50%;
           font-size: 16px;
           text-align: center;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
         }
 
         .menu-button:hover {
@@ -157,27 +158,27 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         }
 
         .menu-button svg {
-          width: 20px;
-          height: 20px;
+          width: 24px;
+          height: 24px;
         }
 
         .action-button {
-          padding: 8px;
-          background: rgba(0, 0, 0, 0.8);
+          padding: 10px;
+          background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
           color: #fff;
-          border-radius: 20px;
+          border-radius: 50%;
           font-size: 16px;
           text-align: center;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           transition: background 0.3s, border-color 0.3s, box-shadow 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
         }
 
         .action-button:hover {
@@ -187,8 +188,8 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         }
 
         .action-button svg {
-          width: 20px;
-          height: 20px;
+          width: 24px;
+          height: 24px;
         }
 
         .menu-overlay {
@@ -297,29 +298,29 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           .header-buttons {
             top: 15px;
             left: 15px;
-            gap: 6px;
+            gap: 8px;
           }
 
           .menu-button {
-            padding: 6px;
-            width: 36px;
-            height: 36px;
+            padding: 8px;
+            width: 40px;
+            height: 40px;
           }
 
           .menu-button svg {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
           }
 
           .action-button {
-            padding: 6px;
-            width: 36px;
-            height: 36px;
+            padding: 8px;
+            width: 40px;
+            height: 40px;
           }
 
           .action-button svg {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
           }
 
           .menu {
