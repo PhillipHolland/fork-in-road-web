@@ -65,9 +65,11 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
         </svg>
       </button>
 
-      <Link href={iconLink} className="action-button">
-        {IconSVG}
-      </Link>
+      <div className="action-button-wrapper">
+        <Link href={iconLink} className="action-button">
+          {IconSVG}
+        </Link>
+      </div>
 
       <div className="menu-overlay" onClick={toggleMenu}></div>
       <div className="menu">
@@ -140,7 +142,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           width: 44px;
           height: 44px;
           z-index: 1002;
-          border: 1px solid red; /* Debug border */
         }
 
         .menu-button:hover {
@@ -153,11 +154,14 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           height: 24px;
         }
 
-        .action-button {
+        .action-button-wrapper {
           position: fixed;
           top: 20px !important;
           right: 20px !important;
-          left: auto !important; /* Ensure no left positioning */
+          z-index: 1003;
+        }
+
+        .action-button {
           padding: 10px;
           background: rgba(0, 0, 0, 0.9);
           border: 1px solid #333;
@@ -173,8 +177,6 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
           justify-content: center;
           width: 44px;
           height: 44px;
-          z-index: 1002;
-          border: 1px solid blue; /* Debug border */
         }
 
         .action-button:hover {
@@ -301,10 +303,12 @@ export default function ClientMenu({ children }: { children: React.ReactNode }) 
             height: 20px;
           }
 
-          .action-button {
+          .action-button-wrapper {
             top: 15px !important;
             right: 15px !important;
-            left: auto !important;
+          }
+
+          .action-button {
             padding: 8px;
             width: 40px;
             height: 40px;
