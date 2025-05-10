@@ -1,4 +1,5 @@
-import { streamText, xAI } from 'ai'; // Import xAI provider from ai package
+import { streamText } from 'ai';
+import { xAI } from '@ai-sdk/xai'; // Import xAI provider from @ai-sdk/xai
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
