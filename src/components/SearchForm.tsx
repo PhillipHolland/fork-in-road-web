@@ -579,16 +579,13 @@ export default function SearchForm() {
         }
 
         .search-icon-wrapper {
-          position: relative;
-          width: 20px;
-          height: 20px;
-        }
-
-        .search-icon {
           position: absolute;
           right: 15px;
           top: 50%;
           transform: translateY(-50%);
+        }
+
+        .search-icon {
           width: 20px;
           height: 20px;
           color: #666;
@@ -1306,14 +1303,12 @@ export default function SearchForm() {
           }
 
           .search-icon-wrapper {
-            width: 18px;
-            height: 18px;
+            right: 12px;
           }
 
           .search-icon {
             width: 18px;
             height: 18px;
-            right: 12px;
             font-size: 18px;
           }
 
