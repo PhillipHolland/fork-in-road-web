@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     });
 
     return result.toDataStreamResponse(); // Use toDataStreamResponse for Next.js
-  } catch (error: Error) { // Type error as Error
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) { // Type error as unknown
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

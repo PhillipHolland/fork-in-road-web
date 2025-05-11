@@ -31,42 +31,9 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  // Prevent zoom on touch for the chat input
-  useEffect(() => {
-    const preventZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    const input = document.getElementById("chat-input");
-    if (input) {
-      input.addEventListener("touchstart", preventZoom, { passive: false });
-      input.addEventListener("touchmove", preventZoom, { passive: false });
-    }
-
-    return () => {
-      if (input) {
-        input.removeEventListener("touchstart", preventZoom);
-        input.removeEventListener("touchmove", preventZoom);
-      }
-    };
-  }, []);
-
   if (!isMounted) {
     return null; // Avoid rendering on the server to prevent hydration issues
   }
-
-  const promptStarters = [
-    "Write an email",
-    "Identify product brands",
-    "Find a better word",
-    "Research a purchase",
-  ];
-
-  const handlePromptClick = (prompt: string) => {
-    handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
-  };
 
   // Convert markdown to HTML and sanitize it (synchronous)
   const renderMarkdown = (markdown: string) => {
@@ -85,11 +52,10 @@ export default function ChatPage() {
           padding-top: 60px; /* Add padding to account for the menu button in the layout */
           background: #fff;
           border-radius: 10px;
-          min-height: 80vh; /* Ensure it takes at least 80vh */
+          height: 80vh;
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
-          position: relative; /* Ensure positioning context for sticky input */
         }
 
         .header {
@@ -100,8 +66,8 @@ export default function ChatPage() {
         }
 
         .header img {
-          width: 64px; /* 25% smaller than 85px on home page */
-          height: 64px;
+          width: 85px;
+          height: 85px;
           margin-bottom: 10px;
         }
 
@@ -221,65 +187,21 @@ export default function ChatPage() {
           white-space: pre-wrap;
         }
 
-        .input-section {
-          position: sticky;
-          bottom: 0;
-          background: #fff;
-          padding: 10px 0;
-          z-index: 100;
-        }
-
-        .prompt-starters {
-          display: flex;
-          gap: 10px;
-          overflow-x: auto;
-          padding: 10px 0;
-          margin-bottom: 10px;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .prompt-starters::-webkit-scrollbar {
-          display: none;
-        }
-
-        .prompt-starter {
-          padding: 8px 16px;
-          background: #f0f0f0;
-          border-radius: 20px;
-          font-size: 14px;
-          color: #333;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: background 0.3s ease;
-        }
-
-        .prompt-starter:hover {
-          background: #e7cf2c;
-          color: #000;
-        }
-
         .input-container {
           display: flex;
           align-items: center;
-          position: relative;
+          gap: 10px;
         }
 
         .chat-input {
           flex: 1;
-          padding: 10px 40px 10px 10px;
+          padding: 10px;
           border: 1px solid #ccc;
           border-radius: 20px;
-          font-size: 16px !important;
-          width: 100%;
-          max-width: 100%;
+          font-size: 16px;
           box-sizing: border-box;
           background: #fff;
           transition: border-color 0.3s ease;
-          touch-action: manipulation;
-          -webkit-appearance: none;
-          appearance: none;
         }
 
         .chat-input:hover {
@@ -287,22 +209,13 @@ export default function ChatPage() {
         }
 
         .send-button {
-          position: absolute;
-          right: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          padding: 6px;
+          padding: 10px;
           background: #000;
           color: #fff;
           border: none;
-          border-radius: 50%;
-          font-size: 14px;
+          border-radius: 20px;
+          font-size: 16px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 30px;
-          height: 30px;
           transition: background 0.3s ease;
         }
 
@@ -319,13 +232,13 @@ export default function ChatPage() {
         @media (max-width: 850px) {
           .chat-container {
             padding: 15px;
-            padding-top: 50px;
-            min-height: 85vh;
+            padding-top: 50px; /* Adjust for smaller menu button on mobile */
+            height: 85vh;
           }
 
           .header img {
-            width: 51px;
-            height: 51px;
+            width: 68px;
+            height: 68px;
           }
 
           .messages-container {
@@ -377,42 +290,20 @@ export default function ChatPage() {
             font-size: 12px;
           }
 
-          .input-section {
-            padding: 8px 0;
-          }
-
-          .prompt-starters {
-            padding: 8px 0;
-            margin-bottom: 8px;
-            gap: 8px;
-          }
-
-          .prompt-starter {
-            padding: 6px 12px;
-            font-size: 12px;
-          }
-
           .chat-input {
-            padding: 8px 35px 8px 8px;
-            font-size: 16px !important;
+            padding: 8px;
+            font-size: 14px;
           }
 
           .send-button {
-            right: 4px;
-            width: 26px;
-            height: 26px;
-            font-size: 12px;
-          }
-
-          .send-button svg {
-            width: 14px;
-            height: 14px;
+            padding: 8px;
+            font-size: 14px;
           }
         }
       `}</style>
 
       <div className="header">
-        <Image src="/settings512.png" alt="Fork in Road Logo" width={64} height={64} priority />
+        <Image src="/settings512.png" alt="Fork in Road Logo" width={85} height={85} priority />
       </div>
 
       <div className="messages-container">
@@ -430,52 +321,23 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="input-section">
-        <div className="prompt-starters">
-          {["Write an email", "Identify product brands", "Find a better word", "Research a purchase"].map((prompt, index) => (
-            <div
-              key={index}
-              className="prompt-starter"
-              onClick={() => handlePromptClick(prompt)}
-            >
-              {prompt}
-            </div>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} className="input-container">
-          <input
-            id="chat-input"
-            type="text"
-            value={input}
-            onChange={handleInputChange}
-            className="chat-input"
-            placeholder="Chat with Grok 3"
-            disabled={isLoading}
-          />
-          {input.trim() && (
-            <button
-              type="submit"
-              className="send-button"
-              disabled={isLoading || !input.trim()}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          )}
-        </form>
+      <div className="input-container">
+        <input
+          type="text"
+          value={input}
+          onChange={handleInputChange}
+          className="chat-input"
+          placeholder="Type your message..."
+          disabled={isLoading}
+        />
+        <button
+          type="submit"
+          className="send-button"
+          onClick={handleSubmit}
+          disabled={isLoading || !input.trim()}
+        >
+          Send
+        </button>
       </div>
     </div>
   );
